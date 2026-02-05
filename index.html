@@ -4,21 +4,19 @@
 <meta charset="UTF-8">
 <title>Oktoobri Kutse</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-.progress-bar {
+.progress-bar{
   color:#fff;
   font-weight:bold;
   text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;
 }
-table th, table td { text-align:center; }
+table th,table td{text-align:center;}
 </style>
 </head>
 
 <body class="bg-light">
-
 <div class="container mt-4">
 
 <!-- PEALKIRI -->
@@ -34,15 +32,9 @@ Oktoobri Kutse → <strong>Päevi reservini</strong> →
 
 <!-- TABID -->
 <ul class="nav nav-tabs mb-3">
-<li class="nav-item">
-<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button>
-</li>
-<li class="nav-item">
-<button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button>
-</li>
-<li class="nav-item">
-<button class="nav-link" data-bs-toggle="tab" data-bs-target="#excelTab">📊 Excel</button>
-</li>
+<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#excelTab">📊 Excel</button></li>
 </ul>
 
 <div class="tab-content">
@@ -55,11 +47,14 @@ Oktoobri Kutse → <strong>Päevi reservini</strong> →
 <label>Kogu periood</label>
 <input id="totalDays" class="form-control mb-2" readonly>
 
-<label>Tehtud</label>
+<label>Tehtud (päevades)</label>
 <input id="doneDays" class="form-control mb-2" readonly>
 
 <label>Jäänud</label>
 <input id="leftDays" class="form-control mb-2" readonly>
+
+<label>Tehtud aeg (kuud / päevad / tunnid)</label>
+<input id="elapsedTime" class="form-control mb-2" readonly>
 
 <label>Progress</label>
 <div class="progress mb-3" style="height:30px">
@@ -79,8 +74,8 @@ Oktoobri Kutse → <strong>Päevi reservini</strong> →
 <div class="card-body text-center">
 <h5>🧹 Tänased korrapidajad</h5>
 <p id="todayDate" class="fw-bold"></p>
-<p><strong>Vasak tuba:</strong> <span id="leftToday"></span></p>
-<p><strong>Parem tuba:</strong> <span id="rightToday"></span></p>
+<p><strong>Parem tuba:</strong> <span id="leftToday"></span></p>
+<p><strong>Vasak tuba:</strong> <span id="rightToday"></span></p>
 </div>
 </div>
 </div>
@@ -90,7 +85,7 @@ Oktoobri Kutse → <strong>Päevi reservini</strong> →
 <div class="card shadow mb-4">
 <div class="card-body">
 
-<h5 class="text-center">🧹 Vasak tuba</h5>
+<h5 class="text-center">🧹 Parem tuba</h5>
 <div class="table-responsive mb-4">
 <table class="table table-bordered table-striped">
 <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead>
@@ -98,7 +93,7 @@ Oktoobri Kutse → <strong>Päevi reservini</strong> →
 </table>
 </div>
 
-<h5 class="text-center">🧹 Parem tuba</h5>
+<h5 class="text-center">🧹 Vasak tuba</h5>
 <div class="table-responsive">
 <table class="table table-bordered table-striped">
 <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead>
@@ -115,31 +110,41 @@ Oktoobri Kutse → <strong>Päevi reservini</strong> →
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// ===== ABI =====
+// ---------- ABI ----------
 function daysBetween(a,b){
   const d1=new Date(a.getFullYear(),a.getMonth(),a.getDate());
   const d2=new Date(b.getFullYear(),b.getMonth(),b.getDate());
   return Math.round((d2-d1)/(1000*60*60*24));
 }
 
-// ===== ANDMED =====
+// kuud/päevad/tunnid
+function elapsedYMDH(start, now){
+  let s=new Date(start);
+  let months=0;
+
+  while(new Date(s.getFullYear(), s.getMonth()+1, s.getDate()) <= now){
+    s.setMonth(s.getMonth()+1);
+    months++;
+  }
+
+  const diffMs = now - s;
+  const days = Math.floor(diffMs / (1000*60*60*24));
+  const hours = Math.floor((diffMs % (1000*60*60*24)) / (1000*60*60));
+
+  return {months, days, hours};
+}
+
+// ---------- ANDMED ----------
 const progressStart=new Date(2025,9,13);
 const progressEnd=new Date(2026,5,12);
 
 const dutyStart=new Date(2026,0,6);
 const dutyEnd=new Date(2026,5,12);
 
-const leftNames=[
-"SUDER","PISNENKO","TAMMUS","KASPAR PLANS",
-"VIISPERT","KAKU","KAAREL PLANS","MARK","KRISTI"
-];
+const leftNames=["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO", "KAAREL PLANS","MARK","KRiSTi"];
+const rightNames=["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
 
-const rightNames=[
-"KOSEMAA","KUUSEORG","LUMISTE","MÜÜR",
-"PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"
-];
-
-// ===== UPDATE =====
+// ---------- UPDATE ----------
 function updateAll(){
 const now=new Date();
 const today=new Date(now.toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
@@ -159,6 +164,11 @@ const left=total-done;
 document.getElementById("totalDays").value=total+" päeva";
 document.getElementById("doneDays").value=done+" päeva";
 document.getElementById("leftDays").value=left+" päeva";
+
+// Läbitud aeg
+const e=elapsedYMDH(progressStart,today);
+document.getElementById("elapsedTime").value=
+`${e.months} kuud, ${e.days} päeva, ${e.hours} tundi`;
 
 const percent=Math.min(100,(done/total*100).toFixed(1));
 document.getElementById("progressBar").style.width=percent+"%";
@@ -181,7 +191,7 @@ document.getElementById("leftToday").innerText=leftNames[index%leftNames.length]
 document.getElementById("rightToday").innerText=rightNames[index%rightNames.length];
 }
 
-// ===== EXCEL =====
+// ---------- EXCEL ----------
 function fillExcel(){
 let i=0;
 for(let d=new Date(dutyStart); d<=dutyEnd; d.setDate(d.getDate()+1)){
