@@ -9,25 +9,20 @@
 
 <style>
 body{
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
 }
-
 .overlay{
-  background: rgba(255,255,255,0.85);
-  min-height: 100vh;
+  background:rgba(255,255,255,0.85);
+  min-height:100vh;
 }
-
 .progress-bar{
   color:#fff;
   font-weight:bold;
   text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;
 }
-
-table th, table td{
-  text-align:center;
-}
+table th,table td{text-align:center;}
 </style>
 </head>
 
@@ -54,7 +49,6 @@ table th, table td{
 
 <!-- EDENEMINE -->
 <div class="tab-pane fade show active" id="progressTab">
-
 <div class="card shadow mb-4">
 <div class="card-body">
 
@@ -81,15 +75,13 @@ table th, table td{
 </div>
 </div>
 
-<!-- SÕDURINALI -->
 <div class="card shadow mb-4 text-center">
 <div class="card-body">
 <h5>😂 Tänane sõdurinali</h5>
-<p id="soldierJoke" class="fw-semibold mt-2"></p>
-<small class="text-muted">Uueneb iga hommik kell 06:00</small>
+<p id="soldierJoke" class="fw-semibold"></p>
+<small class="text-muted">Uueneb iga päev kell 06:00</small>
 </div>
 </div>
-
 </div>
 
 <!-- TÄNA -->
@@ -98,8 +90,8 @@ table th, table td{
 <div class="card-body">
 <h5>🧹 Tänased korrapidajad</h5>
 <p id="todayDate" class="fw-bold"></p>
-<p><strong>Parema toa korrapidaja:</strong> <span id="rightToday"></span></p>
-<p><strong>Vasaku toa korrapidaja:</strong> <span id="leftToday"></span></p>
+<p><strong>Parem tuba:</strong> <span id="todayRight"></span></p>
+<p><strong>Vasak tuba:</strong> <span id="todayLeft"></span></p>
 </div>
 </div>
 </div>
@@ -109,17 +101,7 @@ table th, table td{
 <div class="card shadow">
 <div class="card-body">
 
-<h5 class="text-center">Parema toa korrapidaja</h5>
-<table class="table table-bordered table-striped mb-4">
-<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead>
-<tbody id="excelRight"></tbody>
-</table>
-
-<h5 class="text-center">Vasaku toa korrapidaja</h5>
-<table class="table table-bordered table-striped">
-<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead>
-<tbody id="excelLeft"></tbody>
-</table>
+<div id="excelTables"></div>
 
 </div>
 </div>
@@ -132,105 +114,124 @@ table th, table td{
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// ---------- TAUSTAPILDID ----------
-const backgrounds=[
- "https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28",
- "https://images.unsplash.com/photo-1598387993211-5c3b8b3bdbf5",
- "https://images.unsplash.com/photo-1520975916090-3105956dac38",
- "https://images.unsplash.com/photo-1558980664-10ea7c8a6c91"
-];
+/* =========================================================
+   🔒 KESKNE KONFIGURATSIOON – MUUDA AINULT SEDA
+   ========================================================= */
+const CONFIG = {
+  progress:{
+    start:new Date(2025,9,13),
+    end:new Date(2026,5,12)
+  },
+  duty:{
+    start:new Date(2026,0,6),
+    end:new Date(2026,5,12)
+  },
+  rooms:{
+    parem:{
+      label:"Parema toa korrapidaja",
+      names:["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"]
+    },
+    vasak:{
+      label:"Vasaku toa korrapidaja",
+      names:["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"]
+    }
+  },
+  jokes:[
+    "Sõdur ei maga – ta ootab suletud silmadega.",
+    "Ajateenistuses õpid, et 'kohe' ei tähenda kunagi.",
+    "Rivis on alati külmem.",
+    "Kui kästakse puhata, tuleb uus käsk.",
+    "Sõdur sööb alati kiiresti, isegi kodus."
+  ],
+  backgrounds:[
+    "https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28",
+    "https://images.unsplash.com/photo-1598387993211-5c3b8b3bdbf5",
+    "https://images.unsplash.com/photo-1520975916090-3105956dac38"
+  ]
+};
 
-// ---------- NALJAD ----------
-const soldierJokes=[
- "Sõdur ei maga – ta ootab suletud silmadega.",
- "Ajateenistuses õpid, et 'kohe' ei tähenda kunagi.",
- "Rivis on alati külmem.",
- "Sõdur sööb alati kiiresti, isegi kodus.",
- "Kui kästakse puhata, tuleb kohe uus käsk.",
- "Ajateenistus õpetab, et vihm tuleb alati külgsuunas."
-];
-
-// ---------- ANDMED ----------
-const progressStart=new Date(2025,9,13);
-const progressEnd=new Date(2026,5,12);
-
-const dutyStart=new Date(2026,0,6);
-const dutyEnd=new Date(2026,5,12);
-
-const leftNames=["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"];
-const rightNames=["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
-
-// ---------- ABI ----------
+/* =========================================================
+   ABI
+   ========================================================= */
 function daysBetween(a,b){
   return Math.floor((b-a)/(1000*60*60*24));
 }
-
-function elapsedTime(start,now){
-  let months=0;
-  let temp=new Date(start);
-  while(new Date(temp.getFullYear(),temp.getMonth()+1,temp.getDate())<=now){
-    temp.setMonth(temp.getMonth()+1);
-    months++;
+function nowEE(){
+  return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
+}
+function elapsed(start,now){
+  let m=0,t=new Date(start);
+  while(new Date(t.getFullYear(),t.getMonth()+1,t.getDate())<=now){
+    t.setMonth(t.getMonth()+1);m++;
   }
-  const diff=now-temp;
-  const days=Math.floor(diff/(1000*60*60*24));
-  const hours=Math.floor((diff%(1000*60*60*24))/(1000*60*60));
-  return `${months} kuud, ${days} päeva, ${hours} tundi`;
+  const d=Math.floor((now-t)/(1000*60*60*24));
+  const h=Math.floor(((now-t)%(1000*60*60*24))/(1000*60*60));
+  return `${m} kuud, ${d} päeva, ${h} tundi`;
 }
 
-// ---------- UPDATE ----------
+/* =========================================================
+   UPDATE
+   ========================================================= */
 function updateAll(){
-const now=new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
+const now=nowEE();
+clock.innerText=now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
-document.getElementById("clock").innerText=
-now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
-
-const total=daysBetween(progressStart,progressEnd);
-const done=Math.max(0,daysBetween(progressStart,now));
+// PROGRESS
+const total=daysBetween(CONFIG.progress.start,CONFIG.progress.end);
+const done=Math.max(0,daysBetween(CONFIG.progress.start,now));
 const left=total-done+1;
 
 totalDays.value=total+" päeva";
 doneDays.value=done+" päeva";
 leftDays.value=left+" päeva";
-elapsedTime.value=elapsedTime(progressStart,now);
+elapsedTime.value=elapsed(CONFIG.progress.start,now);
 
-const percent=Math.min(100,(done/total*100).toFixed(1));
-progressBar.style.width=percent+"%";
-progressBar.innerText=percent+"%";
+const pct=Math.min(100,(done/total*100).toFixed(1));
+progressBar.style.width=pct+"%";
+progressBar.innerText=pct+"%";
 
-const g50=Math.round(total*0.5);
-const g75=Math.round(total*0.75);
 goal.value=
-done<g50?`50%: ${g50-done} päeva`:
-done<g75?`75%: ${g75-done} päeva`:
+done<total*0.5?`50%: ${Math.round(total*0.5-done)} päeva`:
+done<total*0.75?`75%: ${Math.round(total*0.75-done)} päeva`:
 done<total?`100%: ${total-done} päeva`:"VALMIS";
 
-const idx=daysBetween(dutyStart,now);
+// TÄNA
 todayDate.innerText=now.toLocaleDateString("et-EE");
-rightToday.innerText=rightNames[idx%rightNames.length];
-leftToday.innerText=leftNames[idx%leftNames.length];
+const idx=daysBetween(CONFIG.duty.start,now);
+todayRight.innerText=CONFIG.rooms.parem.names[idx%CONFIG.rooms.parem.names.length];
+todayLeft.innerText=CONFIG.rooms.vasak.names[idx%CONFIG.rooms.vasak.names.length];
 
 // NALI 06:00
 let jokeDay=new Date(now);
 if(now.getHours()<6) jokeDay.setDate(jokeDay.getDate()-1);
-soldierJoke.innerText=soldierJokes[daysBetween(new Date(2025,0,1),jokeDay)%soldierJokes.length];
+soldierJoke.innerText=CONFIG.jokes[daysBetween(new Date(2025,0,1),jokeDay)%CONFIG.jokes.length];
 
 // TAUST
 document.body.style.backgroundImage=
-`url(${backgrounds[daysBetween(new Date(2025,0,1),now)%backgrounds.length]})`;
+`url(${CONFIG.backgrounds[daysBetween(new Date(2025,0,1),now)%CONFIG.backgrounds.length]})`;
 }
 
-// ---------- EXCEL ----------
-function fillExcel(){
-let i=0;
-for(let d=new Date(dutyStart);d<=dutyEnd;d.setDate(d.getDate()+1)){
-excelRight.innerHTML+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${rightNames[i%rightNames.length]}</td></tr>`;
-excelLeft.innerHTML+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${leftNames[i%leftNames.length]}</td></tr>`;
-i++;
+/* =========================================================
+   EXCEL TABELID (AUTOMAATNE)
+   ========================================================= */
+function buildExcel(){
+let html="";
+for(const key in CONFIG.rooms){
+  const room=CONFIG.rooms[key];
+  html+=`<h5 class="text-center">${room.label}</h5>
+  <table class="table table-bordered table-striped mb-4">
+  <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody>`;
+  let i=0;
+  for(let d=new Date(CONFIG.duty.start);d<=CONFIG.duty.end;d.setDate(d.getDate()+1)){
+    html+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i%room.names.length]}</td></tr>`;
+    i++;
+  }
+  html+="</tbody></table>";
 }
+excelTables.innerHTML=html;
 }
 
-fillExcel();
+buildExcel();
 updateAll();
 setInterval(updateAll,1000);
 </script>
