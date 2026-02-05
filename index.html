@@ -190,7 +190,7 @@ now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
 const total = daysBetween(progressStart, progressEnd);
 const done  = Math.max(0, daysBetween(progressStart, now));
-const left  = total - done;
+const left  = total - done + 1;
 
 document.getElementById("totalDays").value = total+" päeva";
 document.getElementById("doneDays").value  = done+" päeva";
