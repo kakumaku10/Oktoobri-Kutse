@@ -40,9 +40,15 @@ table th,table td{text-align:center;}
 
 <!-- TABID -->
 <ul class="nav nav-tabs mb-3">
-<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#excelTab">📊 Excel</button></li>
+<li class="nav-item">
+<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button>
+</li>
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button>
+</li>
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">🧹 Toa korrapidaja list</button>
+</li>
 </ul>
 
 <div class="tab-content">
@@ -96,12 +102,14 @@ table th,table td{text-align:center;}
 </div>
 </div>
 
-<!-- EXCEL -->
-<div class="tab-pane fade" id="excelTab">
+<!-- KORRAPIDAJA LIST -->
+<div class="tab-pane fade" id="listTab">
 <div class="card shadow">
 <div class="card-body">
 
-<div id="excelTables"></div>
+<div class="accordion" id="roomsAccordion">
+<!-- siia ehitatakse automaatselt -->
+</div>
 
 </div>
 </div>
@@ -114,18 +122,10 @@ table th,table td{text-align:center;}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-/* =========================================================
-   🔒 KESKNE KONFIGURATSIOON – MUUDA AINULT SEDA
-   ========================================================= */
-const CONFIG = {
-  progress:{
-    start:new Date(2025,9,13),
-    end:new Date(2026,5,12)
-  },
-  duty:{
-    start:new Date(2026,0,6),
-    end:new Date(2026,5,12)
-  },
+/* ===================== KONFIG ===================== */
+const CONFIG={
+  progress:{start:new Date(2025,9,13),end:new Date(2026,5,12)},
+  duty:{start:new Date(2026,0,6),end:new Date(2026,5,12)},
   rooms:{
     parem:{
       label:"Parema toa korrapidaja",
@@ -140,8 +140,7 @@ const CONFIG = {
     "Sõdur ei maga – ta ootab suletud silmadega.",
     "Ajateenistuses õpid, et 'kohe' ei tähenda kunagi.",
     "Rivis on alati külmem.",
-    "Kui kästakse puhata, tuleb uus käsk.",
-    "Sõdur sööb alati kiiresti, isegi kodus."
+    "Kui kästakse puhata, tuleb uus käsk."
   ],
   backgrounds:[
     "https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28",
@@ -150,33 +149,26 @@ const CONFIG = {
   ]
 };
 
-/* =========================================================
-   ABI
-   ========================================================= */
-function daysBetween(a,b){
-  return Math.floor((b-a)/(1000*60*60*24));
-}
-function nowEE(){
-  return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
-}
+/* ===================== ABI ===================== */
+const dayMs=1000*60*60*24;
+const nowEE=()=>new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
+const daysBetween=(a,b)=>Math.floor((b-a)/dayMs);
+
 function elapsed(start,now){
   let m=0,t=new Date(start);
   while(new Date(t.getFullYear(),t.getMonth()+1,t.getDate())<=now){
     t.setMonth(t.getMonth()+1);m++;
   }
-  const d=Math.floor((now-t)/(1000*60*60*24));
-  const h=Math.floor(((now-t)%(1000*60*60*24))/(1000*60*60));
+  const d=Math.floor((now-t)/dayMs);
+  const h=Math.floor(((now-t)%dayMs)/(1000*60*60));
   return `${m} kuud, ${d} päeva, ${h} tundi`;
 }
 
-/* =========================================================
-   UPDATE
-   ========================================================= */
+/* ===================== UPDATE ===================== */
 function updateAll(){
 const now=nowEE();
 clock.innerText=now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
-// PROGRESS
 const total=daysBetween(CONFIG.progress.start,CONFIG.progress.end);
 const done=Math.max(0,daysBetween(CONFIG.progress.start,now));
 const left=total-done+1;
@@ -195,43 +187,52 @@ done<total*0.5?`50%: ${Math.round(total*0.5-done)} päeva`:
 done<total*0.75?`75%: ${Math.round(total*0.75-done)} päeva`:
 done<total?`100%: ${total-done} päeva`:"VALMIS";
 
-// TÄNA
-todayDate.innerText=now.toLocaleDateString("et-EE");
 const idx=daysBetween(CONFIG.duty.start,now);
+todayDate.innerText=now.toLocaleDateString("et-EE");
 todayRight.innerText=CONFIG.rooms.parem.names[idx%CONFIG.rooms.parem.names.length];
 todayLeft.innerText=CONFIG.rooms.vasak.names[idx%CONFIG.rooms.vasak.names.length];
 
-// NALI 06:00
 let jokeDay=new Date(now);
 if(now.getHours()<6) jokeDay.setDate(jokeDay.getDate()-1);
 soldierJoke.innerText=CONFIG.jokes[daysBetween(new Date(2025,0,1),jokeDay)%CONFIG.jokes.length];
 
-// TAUST
 document.body.style.backgroundImage=
 `url(${CONFIG.backgrounds[daysBetween(new Date(2025,0,1),now)%CONFIG.backgrounds.length]})`;
 }
 
-/* =========================================================
-   EXCEL TABELID (AUTOMAATNE)
-   ========================================================= */
-function buildExcel(){
-let html="";
+/* ===================== ACCORDION LIST ===================== */
+function buildLists(){
+let html="",iAcc=0;
 for(const key in CONFIG.rooms){
   const room=CONFIG.rooms[key];
-  html+=`<h5 class="text-center">${room.label}</h5>
-  <table class="table table-bordered table-striped mb-4">
-  <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody>`;
+  html+=`
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button ${iAcc?`collapsed`:``}" data-bs-toggle="collapse"
+        data-bs-target="#room${iAcc}">
+        ${room.label}
+      </button>
+    </h2>
+    <div id="room${iAcc}" class="accordion-collapse collapse ${iAcc?``:`show`}"
+      data-bs-parent="#roomsAccordion">
+      <div class="accordion-body">
+        <table class="table table-bordered table-striped">
+        <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody>`;
   let i=0;
   for(let d=new Date(CONFIG.duty.start);d<=CONFIG.duty.end;d.setDate(d.getDate()+1)){
     html+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i%room.names.length]}</td></tr>`;
     i++;
   }
-  html+="</tbody></table>";
+  html+=`</tbody></table>
+      </div>
+    </div>
+  </div>`;
+  iAcc++;
 }
-excelTables.innerHTML=html;
+roomsAccordion.innerHTML=html;
 }
 
-buildExcel();
+buildLists();
 updateAll();
 setInterval(updateAll,1000);
 </script>
