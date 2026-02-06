@@ -12,6 +12,7 @@ body{
   background-size:cover;
   background-position:center;
   background-attachment:fixed;
+  transition: background-image 1s ease-in-out;
 }
 .overlay{
   background:rgba(255,255,255,0.85);
@@ -30,7 +31,6 @@ table th,table td{text-align:center;}
 <div class="overlay">
 <div class="container py-4">
 
-<!-- PEALKIRI -->
 <div class="card shadow mb-3 text-center">
 <div class="card-body">
 <h4>🇪🇪 Oktoobri Kutse → <strong>Päevi reservini</strong></h4>
@@ -38,7 +38,6 @@ table th,table td{text-align:center;}
 </div>
 </div>
 
-<!-- TABID -->
 <ul class="nav nav-tabs mb-3">
 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
@@ -47,31 +46,21 @@ table th,table td{text-align:center;}
 
 <div class="tab-content">
 
-<!-- EDENEMINE -->
 <div class="tab-pane fade show active" id="progressTab">
 <div class="card shadow mb-4">
 <div class="card-body">
 
-<label>Kogu periood</label>
-<input id="totalDays" class="form-control mb-2" readonly>
-
-<label>Tehtud</label>
-<input id="doneDays" class="form-control mb-2" readonly>
-
-<label>Jäänud</label>
-<input id="leftDays" class="form-control mb-2" readonly>
-
-<label>Läbitud aeg</label>
-<input id="elapsedTime" class="form-control mb-2" readonly>
+<label>Kogu periood</label><input id="totalDays" class="form-control mb-2" readonly>
+<label>Tehtud</label><input id="doneDays" class="form-control mb-2" readonly>
+<label>Jäänud</label><input id="leftDays" class="form-control mb-2" readonly>
+<label>Läbitud aeg</label><input id="elapsedTime" class="form-control mb-2" readonly>
 
 <label>Progress</label>
 <div class="progress mb-3" style="height:30px">
 <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
 </div>
 
-<label>Järgmine eesmärk</label>
-<input id="goal" class="form-control" readonly>
-
+<label>Järgmine eesmärk</label><input id="goal" class="form-control" readonly>
 </div>
 </div>
 
@@ -84,7 +73,6 @@ table th,table td{text-align:center;}
 </div>
 </div>
 
-<!-- TÄNA -->
 <div class="tab-pane fade" id="todayTab">
 <div class="card shadow text-center">
 <div class="card-body">
@@ -96,7 +84,6 @@ table th,table td{text-align:center;}
 </div>
 </div>
 
-<!-- LIST -->
 <div class="tab-pane fade" id="listTab">
 <div class="card shadow">
 <div class="card-body">
@@ -112,7 +99,6 @@ table th,table td{text-align:center;}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-/* ===================== KONFIG ===================== */
 const CONFIG={
   progress:{ start:new Date(2025,9,13), end:new Date(2026,5,12) },
   duty:{ start:new Date(2026,0,6), end:new Date(2026,5,12) },
@@ -127,26 +113,28 @@ const CONFIG={
     "Kui kästakse puhata, tuleb uus käsk."
   ],
   backgrounds:[
-    "https://pildid.mil.ee/_data/i/upload/2026/02/04/20260204191434-e60dd324-me.jpg",
-    "https://pildid.mil.ee/_data/i/upload/2026/02/06/20260206145804-83004c59-me.jpg",
-    "https://pildid.mil.ee/_data/i/upload/2026/02/06/20260206145810-fdae5c2b-me.jpg",
-    "https://pildid.mil.ee/_data/i/upload/2026/02/06/20260206145814-e86ca63a-me.jpg",
-    "https://pildid.mil.ee/_data/i/upload/2026/02/06/20260206145820-fa3ccb9d-me.jpg",
-    "https://pildid.mil.ee/_data/i/upload/2025/11/26/20251126171546-5b53380f-cu_e520x360.jpg",
-    "https://pildid.mil.ee/_data/i/upload/2025/11/26/20251126171547-37ccbf01-cu_e520x360.jpg",
-    "https://pildid.mil.ee/_data/i/upload/2025/11/26/20251126171542-fc255e4f-cu_e520x360.jpg",
-    "https://pildid.mil.ee/_data/i/upload/2026/01/21/20260121133913-0930cd15-cu_e520x360.jpg"
+    "https://images.unsplash.com/photo-1569085141390-2e5a064d97a0",
+    "https://images.unsplash.com/photo-1581093588401-56b5bb4cc0d6",
+    "https://images.unsplash.com/photo-1599545891428-2c76d77a70d2",
+    "https://images.unsplash.com/photo-1562859669-5f685b0ded1c",
+    "https://images.unsplash.com/photo-1583259611324-7d5fdf68fcf5",
+    "https://images.unsplash.com/photo-1508896694512-0b5de8f6b6d6",
+    "https://images.unsplash.com/photo-1608461790150-2809f99b1461",
+    "https://images.unsplash.com/photo-1612831455549-36fe380aea9a",
+    "https://images.unsplash.com/photo-1542623024-6d50f8023f39",
+    "https://images.unsplash.com/photo-1595849931646-d28204b03bd3",
+    "https://images.unsplash.com/photo-1609691979195-62f713477d5a",
+    "https://images.unsplash.com/photo-1586769852836-a9d49453f6d8"
   ]
 };
 
-/* ===================== ABI ===================== */
-const dayMs = 1000*60*60*24;
-const nowEE = () => new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
-const dayOnly = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-const daysBetween = (a,b) => Math.floor((b-a)/dayMs);
+const dayMs=1000*60*60*24;
+const nowEE=()=>new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
+const dayOnly=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const daysBetween=(a,b)=>Math.floor((b-a)/dayMs);
 
-function elapsed(start, now){
-  let m=0, t=new Date(start);
+function elapsed(start,now){
+  let m=0,t=new Date(start);
   while(new Date(t.getFullYear(),t.getMonth()+1,t.getDate())<=now){
     t.setMonth(t.getMonth()+1); m++;
   }
@@ -155,48 +143,40 @@ function elapsed(start, now){
   return `${m} kuud, ${d} päeva, ${h} tundi`;
 }
 
-/* ===================== UPDATE ===================== */
 function updateAll(){
-  const now = nowEE();
-  clock.innerText = now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
+  const now=nowEE();
+  clock.innerText=now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
-  const today = dayOnly(now);
-  const start = dayOnly(CONFIG.progress.start);
-  const end   = dayOnly(CONFIG.progress.end);
+  const today=dayOnly(now), start=dayOnly(CONFIG.progress.start), end=dayOnly(CONFIG.progress.end);
+  const total=daysBetween(start,end), done=daysBetween(start,today), left=daysBetween(today,end);
 
-  const total = daysBetween(start, end);
-  const done  = Math.max(0, daysBetween(start, today));
-  const left  = Math.max(0, daysBetween(today, end));
+  totalDays.value=total+" päeva";
+  doneDays.value=done+" päeva";
+  leftDays.value=left+" päeva";
+  elapsedTime.value=elapsed(start,now);
 
-  totalDays.value = total+" päeva";
-  doneDays.value  = done+" päeva";
-  leftDays.value  = left+" päeva";
-  elapsedTime.value = elapsed(start, now);
+  const pct=Math.min(100,(done/total*100).toFixed(1));
+  progressBar.style.width=pct+"%";
+  progressBar.innerText=pct+"%";
 
-  const pct = Math.min(100,(done/total*100).toFixed(1));
-  progressBar.style.width = pct+"%";
-  progressBar.innerText = pct+"%";
+  goal.value=
+    done<total*0.5?`50%: ${Math.round(total*0.5-done)} päeva`:
+    done<total*0.75?`75%: ${Math.round(total*0.75-done)} päeva`:
+    done<total?`100%: ${total-done} päeva`:"VALMIS";
 
-  goal.value =
-    done < total*0.5 ? `50%: ${Math.round(total*0.5-done)} päeva` :
-    done < total*0.75? `75%: ${Math.round(total*0.75-done)} päeva` :
-    done < total     ? `100%: ${total-done} päeva` : "VALMIS";
+  const idx=daysBetween(dayOnly(CONFIG.duty.start),today);
+  todayDate.innerText=today.toLocaleDateString("et-EE");
+  todayRight.innerText=CONFIG.rooms.parem.names[idx%CONFIG.rooms.parem.names.length];
+  todayLeft.innerText=CONFIG.rooms.vasak.names[idx%CONFIG.rooms.vasak.names.length];
 
-  const idx = daysBetween(dayOnly(CONFIG.duty.start), today);
-  todayDate.innerText = today.toLocaleDateString("et-EE");
-  todayRight.innerText = CONFIG.rooms.parem.names[idx % CONFIG.rooms.parem.names.length];
-  todayLeft.innerText  = CONFIG.rooms.vasak.names[idx % CONFIG.rooms.vasak.names.length];
+  let jokeDay=new Date(today);
+  if(now.getHours()<6) jokeDay.setDate(jokeDay.getDate()-1);
+  soldierJoke.innerText=CONFIG.jokes[daysBetween(new Date(2025,0,1),jokeDay)%CONFIG.jokes.length];
 
-  let jokeDay = new Date(today);
-  if(now.getHours() < 6) jokeDay.setDate(jokeDay.getDate()-1);
-  soldierJoke.innerText =
-    CONFIG.jokes[daysBetween(new Date(2025,0,1), jokeDay) % CONFIG.jokes.length];
-
-  document.body.style.backgroundImage =
-    `url(${CONFIG.backgrounds[daysBetween(new Date(2025,0,1), today) % CONFIG.backgrounds.length]})`;
+  document.body.style.backgroundImage=
+    `url(${CONFIG.backgrounds[daysBetween(new Date(2025,0,1),today)%CONFIG.backgrounds.length]})`;
 }
 
-/* ===================== LIST ===================== */
 function buildLists(){
   let html="", iAcc=0;
   for(const key in CONFIG.rooms){
@@ -215,14 +195,14 @@ function buildLists(){
         <table class="table table-bordered table-striped">
         <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody>`;
     let i=0;
-    for(let d=new Date(CONFIG.duty.start); d<=CONFIG.duty.end; d.setDate(d.getDate()+1)){
+    for(let d=new Date(CONFIG.duty.start);d<=CONFIG.duty.end;d.setDate(d.getDate()+1)){
       html+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i%room.names.length]}</td></tr>`;
       i++;
     }
     html+=`</tbody></table></div></div></div>`;
     iAcc++;
   }
-  roomsAccordion.innerHTML = html;
+  roomsAccordion.innerHTML=html;
 }
 
 buildLists();
