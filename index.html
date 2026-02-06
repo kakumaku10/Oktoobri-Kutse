@@ -40,15 +40,9 @@ table th,table td{text-align:center;}
 
 <!-- TABID -->
 <ul class="nav nav-tabs mb-3">
-<li class="nav-item">
-<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button>
-</li>
-<li class="nav-item">
-<button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button>
-</li>
-<li class="nav-item">
-<button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">🧹 Toa korrapidaja list</button>
-</li>
+<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">🧹 Toa korrapidaja list</button></li>
 </ul>
 
 <div class="tab-content">
@@ -102,15 +96,11 @@ table th,table td{text-align:center;}
 </div>
 </div>
 
-<!-- KORRAPIDAJA LIST -->
+<!-- LIST -->
 <div class="tab-pane fade" id="listTab">
 <div class="card shadow">
 <div class="card-body">
-
-<div class="accordion" id="roomsAccordion">
-<!-- siia ehitatakse automaatselt -->
-</div>
-
+<div class="accordion" id="roomsAccordion"></div>
 </div>
 </div>
 </div>
@@ -124,17 +114,11 @@ table th,table td{text-align:center;}
 <script>
 /* ===================== KONFIG ===================== */
 const CONFIG={
-  progress:{start:new Date(2025,9,13),end:new Date(2026,5,12)},
-  duty:{start:new Date(2026,0,6),end:new Date(2026,5,12)},
+  progress:{ start:new Date(2025,9,13), end:new Date(2026,5,12) },
+  duty:{ start:new Date(2026,0,6), end:new Date(2026,5,12) },
   rooms:{
-    parem:{
-      label:"Parema toa korrapidaja",
-      names:["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"]
-    },
-    vasak:{
-      label:"Vasaku toa korrapidaja",
-      names:["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"]
-    }
+    parem:{ label:"Parema toa korrapidaja", names:["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"] },
+    vasak:{ label:"Vasaku toa korrapidaja", names:["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"] }
   },
   jokes:[
     "Sõdur ei maga – ta ootab suletud silmadega.",
@@ -150,14 +134,15 @@ const CONFIG={
 };
 
 /* ===================== ABI ===================== */
-const dayMs=1000*60*60*24;
-const nowEE=()=>new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
-const daysBetween=(a,b)=>Math.floor((b-a)/dayMs);
+const dayMs = 1000*60*60*24;
+const nowEE = () => new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
+const dayOnly = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const daysBetween = (a,b) => Math.floor((b-a)/dayMs);
 
-function elapsed(start,now){
-  let m=0,t=new Date(start);
+function elapsed(start, now){
+  let m=0, t=new Date(start);
   while(new Date(t.getFullYear(),t.getMonth()+1,t.getDate())<=now){
-    t.setMonth(t.getMonth()+1);m++;
+    t.setMonth(t.getMonth()+1); m++;
   }
   const d=Math.floor((now-t)/dayMs);
   const h=Math.floor(((now-t)%dayMs)/(1000*60*60));
@@ -166,70 +151,72 @@ function elapsed(start,now){
 
 /* ===================== UPDATE ===================== */
 function updateAll(){
-const now=nowEE();
-clock.innerText=now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
+  const now = nowEE();
+  clock.innerText = now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
-const total=daysBetween(CONFIG.progress.start,CONFIG.progress.end);
-const done=Math.max(0,daysBetween(CONFIG.progress.start,now));
-const left=total-done+1;
+  const today = dayOnly(now);
+  const start = dayOnly(CONFIG.progress.start);
+  const end   = dayOnly(CONFIG.progress.end);
 
-totalDays.value=total+" päeva";
-doneDays.value=done+" päeva";
-leftDays.value=left+" päeva";
-elapsedTime.value=elapsed(CONFIG.progress.start,now);
+  const total = daysBetween(start, end);
+  const done  = Math.max(0, daysBetween(start, today));
+  const left  = Math.max(0, daysBetween(today, end));
 
-const pct=Math.min(100,(done/total*100).toFixed(1));
-progressBar.style.width=pct+"%";
-progressBar.innerText=pct+"%";
+  totalDays.value = total+" päeva";
+  doneDays.value  = done+" päeva";
+  leftDays.value  = left+" päeva";
+  elapsedTime.value = elapsed(start, now);
 
-goal.value=
-done<total*0.5?`50%: ${Math.round(total*0.5-done)} päeva`:
-done<total*0.75?`75%: ${Math.round(total*0.75-done)} päeva`:
-done<total?`100%: ${total-done} päeva`:"VALMIS";
+  const pct = Math.min(100,(done/total*100).toFixed(1));
+  progressBar.style.width = pct+"%";
+  progressBar.innerText = pct+"%";
 
-const idx=daysBetween(CONFIG.duty.start,now);
-todayDate.innerText=now.toLocaleDateString("et-EE");
-todayRight.innerText=CONFIG.rooms.parem.names[idx%CONFIG.rooms.parem.names.length];
-todayLeft.innerText=CONFIG.rooms.vasak.names[idx%CONFIG.rooms.vasak.names.length];
+  goal.value =
+    done < total*0.5 ? `50%: ${Math.round(total*0.5-done)} päeva` :
+    done < total*0.75? `75%: ${Math.round(total*0.75-done)} päeva` :
+    done < total     ? `100%: ${total-done} päeva` : "VALMIS";
 
-let jokeDay=new Date(now);
-if(now.getHours()<6) jokeDay.setDate(jokeDay.getDate()-1);
-soldierJoke.innerText=CONFIG.jokes[daysBetween(new Date(2025,0,1),jokeDay)%CONFIG.jokes.length];
+  const idx = daysBetween(dayOnly(CONFIG.duty.start), today);
+  todayDate.innerText = today.toLocaleDateString("et-EE");
+  todayRight.innerText = CONFIG.rooms.parem.names[idx % CONFIG.rooms.parem.names.length];
+  todayLeft.innerText  = CONFIG.rooms.vasak.names[idx % CONFIG.rooms.vasak.names.length];
 
-document.body.style.backgroundImage=
-`url(${CONFIG.backgrounds[daysBetween(new Date(2025,0,1),now)%CONFIG.backgrounds.length]})`;
+  let jokeDay = new Date(today);
+  if(now.getHours() < 6) jokeDay.setDate(jokeDay.getDate()-1);
+  soldierJoke.innerText =
+    CONFIG.jokes[daysBetween(new Date(2025,0,1), jokeDay) % CONFIG.jokes.length];
+
+  document.body.style.backgroundImage =
+    `url(${CONFIG.backgrounds[daysBetween(new Date(2025,0,1), today) % CONFIG.backgrounds.length]})`;
 }
 
-/* ===================== ACCORDION LIST ===================== */
+/* ===================== LIST ===================== */
 function buildLists(){
-let html="",iAcc=0;
-for(const key in CONFIG.rooms){
-  const room=CONFIG.rooms[key];
-  html+=`
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button ${iAcc?`collapsed`:``}" data-bs-toggle="collapse"
-        data-bs-target="#room${iAcc}">
-        ${room.label}
-      </button>
-    </h2>
-    <div id="room${iAcc}" class="accordion-collapse collapse ${iAcc?``:`show`}"
-      data-bs-parent="#roomsAccordion">
-      <div class="accordion-body">
+  let html="", iAcc=0;
+  for(const key in CONFIG.rooms){
+    const room=CONFIG.rooms[key];
+    html+=`
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button ${iAcc?"collapsed":""}"
+          data-bs-toggle="collapse" data-bs-target="#room${iAcc}">
+          ${room.label}
+        </button>
+      </h2>
+      <div id="room${iAcc}" class="accordion-collapse collapse ${iAcc?"":"show"}"
+        data-bs-parent="#roomsAccordion">
+        <div class="accordion-body">
         <table class="table table-bordered table-striped">
         <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody>`;
-  let i=0;
-  for(let d=new Date(CONFIG.duty.start);d<=CONFIG.duty.end;d.setDate(d.getDate()+1)){
-    html+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i%room.names.length]}</td></tr>`;
-    i++;
+    let i=0;
+    for(let d=new Date(CONFIG.duty.start); d<=CONFIG.duty.end; d.setDate(d.getDate()+1)){
+      html+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i%room.names.length]}</td></tr>`;
+      i++;
+    }
+    html+=`</tbody></table></div></div></div>`;
+    iAcc++;
   }
-  html+=`</tbody></table>
-      </div>
-    </div>
-  </div>`;
-  iAcc++;
-}
-roomsAccordion.innerHTML=html;
+  roomsAccordion.innerHTML = html;
 }
 
 buildLists();
