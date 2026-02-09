@@ -14,13 +14,16 @@ body{
   background-attachment:fixed;
 }
 .overlay{
-  background:rgba(255,255,255,0.8);
+  background:rgba(255,255,255,0.82);
   min-height:100vh;
 }
 .progress-bar{
   color:#fff;
   font-weight:bold;
   text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;
+}
+table th, table td{
+  text-align:center;
 }
 </style>
 </head>
@@ -29,6 +32,7 @@ body{
 <div class="overlay">
 <div class="container py-4">
 
+<!-- PEALKIRI -->
 <div class="card shadow text-center mb-3">
 <div class="card-body">
 <h4>🇪🇪 Oktoobri Kutse → <strong>Päevi reservini</strong></h4>
@@ -36,6 +40,23 @@ body{
 </div>
 </div>
 
+<!-- TABID -->
+<ul class="nav nav-tabs mb-3">
+<li class="nav-item">
+<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button>
+</li>
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button>
+</li>
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">📋 Toa korrapidaja list</button>
+</li>
+</ul>
+
+<div class="tab-content">
+
+<!-- EDENEMINE -->
+<div class="tab-pane fade show active" id="progressTab">
 <div class="card shadow mb-4">
 <div class="card-body">
 
@@ -58,7 +79,30 @@ body{
 
 </div>
 </div>
+</div>
 
+<!-- TÄNA -->
+<div class="tab-pane fade" id="todayTab">
+<div class="card shadow text-center">
+<div class="card-body">
+<h5>🧹 Tänased korrapidajad</h5>
+<p id="todayDate" class="fw-bold"></p>
+<p><strong>Parem tuba:</strong> <span id="todayRight"></span></p>
+<p><strong>Vasak tuba:</strong> <span id="todayLeft"></span></p>
+</div>
+</div>
+</div>
+
+<!-- LIST -->
+<div class="tab-pane fade" id="listTab">
+<div class="card shadow">
+<div class="card-body">
+<div class="accordion" id="roomsAccordion"></div>
+</div>
+</div>
+</div>
+
+</div>
 </div>
 </div>
 
@@ -66,20 +110,32 @@ body{
 
 <script>
 /* ================== KONFIG ================== */
-const START_DATE = new Date(2025, 9, 13); // 13.10.2025
-const END_DATE   = new Date(2026, 5, 12); // 12.06.2026
+const START_DATE = new Date(2025,9,13);
+const END_DATE   = new Date(2026,5,12);
 
-/* ================== ABIFUNKTSIOONID ================== */
-const DAY_MS = 1000 * 60 * 60 * 24;
+const DUTY_START = new Date(2026,0,6);
+const DUTY_END   = new Date(2026,5,12);
+
+const ROOMS = {
+  parem: {
+    label: "Parema toa korrapidaja",
+    names: ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"]
+  },
+  vasak: {
+    label: "Vasaku toa korrapidaja",
+    names: ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"]
+  }
+};
+
+/* ================== ABID ================== */
+const DAY_MS = 1000*60*60*24;
 
 function nowTallinn(){
   return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
 }
-
 function dayOnly(d){
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
-
 function daysBetween(a,b){
   return Math.floor((b - a) / DAY_MS);
 }
@@ -87,42 +143,75 @@ function daysBetween(a,b){
 /* ================== UPDATE ================== */
 function update(){
   const now = nowTallinn();
-  document.getElementById("clock").innerText =
-    now.toLocaleDateString("et-EE") + " " + now.toLocaleTimeString("et-EE");
+  clock.innerText = now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
   const today = dayOnly(now);
   const start = dayOnly(START_DATE);
   const end   = dayOnly(END_DATE);
 
-  // KOGU PERIOOD
-  const total = daysBetween(start, end) + 1;
+  const total = daysBetween(start,end) + 1;
+  const done  = Math.max(0, daysBetween(start,today));
+  const left  = Math.max(0, daysBetween(today,end) + 1);
 
-  // TEHTUD (täna ei loeta tehtuks)
-  const done = Math.max(0, daysBetween(start, today));
+  totalDays.value = total+" päeva";
+  doneDays.value  = done+" päeva";
+  leftDays.value  = left+" päeva";
 
-  // JÄÄNUD (LÕPPPÄEV LOETAKSE KAASA)
-  const left = Math.max(0, daysBetween(today, end) + 1);
+  const pct = Math.min(100,(done/total*100).toFixed(1));
+  progressBar.style.width = pct+"%";
+  progressBar.innerText = pct+"%";
 
-  totalDays.value = total + " päeva";
-  doneDays.value  = done + " päeva";
-  leftDays.value  = left + " päeva";
-
-  const percent = Math.min(100, (done / total * 100).toFixed(1));
-  progressBar.style.width = percent + "%";
-  progressBar.innerText = percent + "%";
-
-  const g50 = Math.round(total * 0.5);
-  const g75 = Math.round(total * 0.75);
-
+  const g50 = Math.round(total*0.5);
+  const g75 = Math.round(total*0.75);
   goal.value =
-    done < g50 ? `50%: ${g50 - done} päeva` :
-    done < g75 ? `75%: ${g75 - done} päeva` :
-    done < total ? `100%: ${total - done} päeva` :
+    done < g50 ? `50%: ${g50-done} päeva` :
+    done < g75 ? `75%: ${g75-done} päeva` :
+    done < total ? `100%: ${total-done} päeva` :
     "VALMIS";
+
+  const dutyIndex = daysBetween(dayOnly(DUTY_START), today);
+  todayDate.innerText = today.toLocaleDateString("et-EE");
+  todayRight.innerText = ROOMS.parem.names[dutyIndex % ROOMS.parem.names.length];
+  todayLeft.innerText  = ROOMS.vasak.names[dutyIndex % ROOMS.vasak.names.length];
 }
 
+/* ================== LISTID ================== */
+function buildLists(){
+  let html="", acc=0;
+
+  for(const key in ROOMS){
+    const room = ROOMS[key];
+    html += `
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button ${acc?"collapsed":""}"
+          data-bs-toggle="collapse" data-bs-target="#room${acc}">
+          ${room.label}
+        </button>
+      </h2>
+      <div id="room${acc}" class="accordion-collapse collapse ${acc?"":"show"}"
+        data-bs-parent="#roomsAccordion">
+        <div class="accordion-body">
+        <table class="table table-bordered table-striped">
+        <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody>`;
+
+    let i=0;
+    for(let d=new Date(DUTY_START); d<=DUTY_END; d.setDate(d.getDate()+1)){
+      html += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i % room.names.length]}</td></tr>`;
+      i++;
+    }
+
+    html += `</tbody></table></div></div></div>`;
+    acc++;
+  }
+
+  roomsAccordion.innerHTML = html;
+}
+
+/* ================== START ================== */
+buildLists();
 update();
-setInterval(update, 1000);
+setInterval(update,1000);
 </script>
 
 </body>
