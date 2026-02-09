@@ -12,10 +12,9 @@ body{
   background-size:cover;
   background-position:center;
   background-attachment:fixed;
-  transition: background-image 1s ease-in-out;
 }
 .overlay{
-  background:rgba(255,255,255,0.85);
+  background:rgba(255,255,255,0.8);
   min-height:100vh;
 }
 .progress-bar{
@@ -23,7 +22,6 @@ body{
   font-weight:bold;
   text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;
 }
-table th,table td{text-align:center;}
 </style>
 </head>
 
@@ -31,183 +29,100 @@ table th,table td{text-align:center;}
 <div class="overlay">
 <div class="container py-4">
 
-<div class="card shadow mb-3 text-center">
+<div class="card shadow text-center mb-3">
 <div class="card-body">
 <h4>🇪🇪 Oktoobri Kutse → <strong>Päevi reservini</strong></h4>
 <p id="clock" class="fw-bold"></p>
 </div>
 </div>
 
-<ul class="nav nav-tabs mb-3">
-<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">🧹 Toa korrapidaja list</button></li>
-</ul>
-
-<div class="tab-content">
-
-<div class="tab-pane fade show active" id="progressTab">
 <div class="card shadow mb-4">
 <div class="card-body">
 
-<label>Kogu periood</label><input id="totalDays" class="form-control mb-2" readonly>
-<label>Tehtud</label><input id="doneDays" class="form-control mb-2" readonly>
-<label>Jäänud</label><input id="leftDays" class="form-control mb-2" readonly>
-<label>Läbitud aeg</label><input id="elapsedTime" class="form-control mb-2" readonly>
+<label>Kogu periood</label>
+<input id="totalDays" class="form-control mb-2" readonly>
+
+<label>Tehtud</label>
+<input id="doneDays" class="form-control mb-2" readonly>
+
+<label>Jäänud</label>
+<input id="leftDays" class="form-control mb-2" readonly>
 
 <label>Progress</label>
 <div class="progress mb-3" style="height:30px">
 <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
 </div>
 
-<label>Järgmine eesmärk</label><input id="goal" class="form-control" readonly>
+<label>Järgmine eesmärk</label>
+<input id="goal" class="form-control" readonly>
+
 </div>
 </div>
 
-<div class="card shadow mb-4 text-center">
-<div class="card-body">
-<h5>😂 Tänane sõdurinali</h5>
-<p id="soldierJoke" class="fw-semibold"></p>
-<small class="text-muted">Uueneb iga päev kell 06:00</small>
-</div>
-</div>
-</div>
-
-<div class="tab-pane fade" id="todayTab">
-<div class="card shadow text-center">
-<div class="card-body">
-<h5>🧹 Tänased korrapidajad</h5>
-<p id="todayDate" class="fw-bold"></p>
-<p><strong>Parem tuba:</strong> <span id="todayRight"></span></p>
-<p><strong>Vasak tuba:</strong> <span id="todayLeft"></span></p>
-</div>
-</div>
-</div>
-
-<div class="tab-pane fade" id="listTab">
-<div class="card shadow">
-<div class="card-body">
-<div class="accordion" id="roomsAccordion"></div>
-</div>
-</div>
-</div>
-
-</div>
 </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-const CONFIG={
-  progress:{ start:new Date(2025,9,13), end:new Date(2026,5,12) },
-  duty:{ start:new Date(2026,0,6), end:new Date(2026,5,12) },
-  rooms:{
-    parem:{ label:"Parema toa korrapidaja", names:["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"] },
-    vasak:{ label:"Vasaku toa korrapidaja", names:["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"] }
-  },
-  jokes:[
-    "Sõdur ei maga – ta ootab suletud silmadega.",
-    "Ajateenistuses õpid, et 'kohe' ei tähenda kunagi.",
-    "Rivis on alati külmem.",
-    "Kui kästakse puhata, tuleb uus käsk."
-  ],
-  backgrounds:[
-    "https://images.unsplash.com/photo-1569085141390-2e5a064d97a0",
-    "https://images.unsplash.com/photo-1581093588401-56b5bb4cc0d6",
-    "https://images.unsplash.com/photo-1599545891428-2c76d77a70d2",
-    "https://images.unsplash.com/photo-1562859669-5f685b0ded1c",
-    "https://images.unsplash.com/photo-1583259611324-7d5fdf68fcf5",
-    "https://images.unsplash.com/photo-1508896694512-0b5de8f6b6d6",
-    "https://images.unsplash.com/photo-1608461790150-2809f99b1461",
-    "https://images.unsplash.com/photo-1612831455549-36fe380aea9a",
-    "https://images.unsplash.com/photo-1542623024-6d50f8023f39",
-    "https://images.unsplash.com/photo-1595849931646-d28204b03bd3",
-    "https://images.unsplash.com/photo-1609691979195-62f713477d5a",
-    "https://images.unsplash.com/photo-1586769852836-a9d49453f6d8"
-  ]
-};
+/* ================== KONFIG ================== */
+const START_DATE = new Date(2025, 9, 13); // 13.10.2025
+const END_DATE   = new Date(2026, 5, 12); // 12.06.2026
 
-const dayMs=1000*60*60*24;
-const nowEE=()=>new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
-const dayOnly=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
-const daysBetween=(a,b)=>Math.floor((b-a)/dayMs);
+/* ================== ABIFUNKTSIOONID ================== */
+const DAY_MS = 1000 * 60 * 60 * 24;
 
-function elapsed(start,now){
-  let m=0,t=new Date(start);
-  while(new Date(t.getFullYear(),t.getMonth()+1,t.getDate())<=now){
-    t.setMonth(t.getMonth()+1); m++;
-  }
-  const d=Math.floor((now-t)/dayMs);
-  const h=Math.floor(((now-t)%dayMs)/(1000*60*60));
-  return `${m} kuud, ${d} päeva, ${h} tundi`;
+function nowTallinn(){
+  return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
 }
 
-function updateAll(){
-  const now=nowEE();
-  clock.innerText=now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
-
-  const today=dayOnly(now), start=dayOnly(CONFIG.progress.start), end=dayOnly(CONFIG.progress.end);
-  const total=daysBetween(start,end), done=daysBetween(start,today), left=daysBetween(today,end);
-
-  totalDays.value=total+" päeva";
-  doneDays.value=done+" päeva";
-  leftDays.value=left+" päeva";
-  elapsedTime.value=elapsed(start,now);
-
-  const pct=Math.min(100,(done/total*100).toFixed(1));
-  progressBar.style.width=pct+"%";
-  progressBar.innerText=pct+"%";
-
-  goal.value=
-    done<total*0.5?`50%: ${Math.round(total*0.5-done)} päeva`:
-    done<total*0.75?`75%: ${Math.round(total*0.75-done)} päeva`:
-    done<total?`100%: ${total-done} päeva`:"VALMIS";
-
-  const idx=daysBetween(dayOnly(CONFIG.duty.start),today);
-  todayDate.innerText=today.toLocaleDateString("et-EE");
-  todayRight.innerText=CONFIG.rooms.parem.names[idx%CONFIG.rooms.parem.names.length];
-  todayLeft.innerText=CONFIG.rooms.vasak.names[idx%CONFIG.rooms.vasak.names.length];
-
-  let jokeDay=new Date(today);
-  if(now.getHours()<6) jokeDay.setDate(jokeDay.getDate()-1);
-  soldierJoke.innerText=CONFIG.jokes[daysBetween(new Date(2025,0,1),jokeDay)%CONFIG.jokes.length];
-
-  document.body.style.backgroundImage=
-    `url(${CONFIG.backgrounds[daysBetween(new Date(2025,0,1),today)%CONFIG.backgrounds.length]})`;
+function dayOnly(d){
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-function buildLists(){
-  let html="", iAcc=0;
-  for(const key in CONFIG.rooms){
-    const room=CONFIG.rooms[key];
-    html+=`
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button ${iAcc?"collapsed":""}"
-          data-bs-toggle="collapse" data-bs-target="#room${iAcc}">
-          ${room.label}
-        </button>
-      </h2>
-      <div id="room${iAcc}" class="accordion-collapse collapse ${iAcc?"":"show"}"
-        data-bs-parent="#roomsAccordion">
-        <div class="accordion-body">
-        <table class="table table-bordered table-striped">
-        <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody>`;
-    let i=0;
-    for(let d=new Date(CONFIG.duty.start);d<=CONFIG.duty.end;d.setDate(d.getDate()+1)){
-      html+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i%room.names.length]}</td></tr>`;
-      i++;
-    }
-    html+=`</tbody></table></div></div></div>`;
-    iAcc++;
-  }
-  roomsAccordion.innerHTML=html;
+function daysBetween(a,b){
+  return Math.floor((b - a) / DAY_MS);
 }
 
-buildLists();
-updateAll();
-setInterval(updateAll,1000);
+/* ================== UPDATE ================== */
+function update(){
+  const now = nowTallinn();
+  document.getElementById("clock").innerText =
+    now.toLocaleDateString("et-EE") + " " + now.toLocaleTimeString("et-EE");
+
+  const today = dayOnly(now);
+  const start = dayOnly(START_DATE);
+  const end   = dayOnly(END_DATE);
+
+  // KOGU PERIOOD
+  const total = daysBetween(start, end) + 1;
+
+  // TEHTUD (täna ei loeta tehtuks)
+  const done = Math.max(0, daysBetween(start, today));
+
+  // JÄÄNUD (LÕPPPÄEV LOETAKSE KAASA)
+  const left = Math.max(0, daysBetween(today, end) + 1);
+
+  totalDays.value = total + " päeva";
+  doneDays.value  = done + " päeva";
+  leftDays.value  = left + " päeva";
+
+  const percent = Math.min(100, (done / total * 100).toFixed(1));
+  progressBar.style.width = percent + "%";
+  progressBar.innerText = percent + "%";
+
+  const g50 = Math.round(total * 0.5);
+  const g75 = Math.round(total * 0.75);
+
+  goal.value =
+    done < g50 ? `50%: ${g50 - done} päeva` :
+    done < g75 ? `75%: ${g75 - done} päeva` :
+    done < total ? `100%: ${total - done} päeva` :
+    "VALMIS";
+}
+
+update();
+setInterval(update, 1000);
 </script>
 
 </body>
