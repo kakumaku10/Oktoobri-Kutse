@@ -29,6 +29,7 @@ body{background:#f4f6f8;}
 <ul class="nav nav-tabs mb-3">
 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">👥 Nimekirjad</button></li>
 </ul>
 
 <div class="tab-content">
@@ -70,6 +71,19 @@ body{background:#f4f6f8;}
 </div>
 
 </div>
+
+<div class="tab-pane fade" id="listTab">
+<div class="card shadow text-center mb-3">
+<div class="card-body">
+<h5>Parem tuba</h5>
+<p id="listRight"></p>
+<hr>
+<h5>Vasak tuba</h5>
+<p id="listLeft"></p>
+</div>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -87,7 +101,7 @@ const R=["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TA
 const L=["ARU","SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"];
 const ALL=[...R,...L];
 
-/* ---- Funktsioon ---- */
+/* ---- PEIDETUD PRIORITEET ---- */
 function h(n){
  let s=0;
  for(let i=0;i<n.length;i++) s+=n.charCodeAt(i)*(i+5);
@@ -100,11 +114,7 @@ function tallinnNow(){
 }
 function day(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function diff(a,b){return Math.floor((b-a)/DAY);}
-
-function seeded(x){
- let v=Math.sin(x)*10000;
- return v-Math.floor(v);
-}
+function seeded(x){let v=Math.sin(x)*10000;return v-Math.floor(v);}
 
 /* ---------------- PÄEVAD ---------------- */
 function calc(){
@@ -127,7 +137,7 @@ function cleaners(today){
  let prev=[],res=[];
 
  for(let d=new Date(start);d<=today;d.setDate(d.getDate()+1)){
-  const seed=diff(start,d)+555;
+  const seed=diff(start,d)+777;
   let pool=[];
 
   ALL.forEach(n=>{
@@ -145,9 +155,11 @@ function cleaners(today){
    i++;
   }
 
+  /* MAX 2 priority */
   let pr=[...set].filter(h);
   if(pr.length>2){
-   set=new Set([...set].filter(n=>!h(n)));
+   let normal=[...set].filter(n=>!h(n));
+   set=new Set(normal);
    while(set.size<8){
     const n=ALL[Math.floor(seeded(seed+200+i)*ALL.length)];
     if(!h(n)) set.add(n);
@@ -188,6 +200,9 @@ function update(){
  todayLeft.innerText=duty(L,today);
 
  areaCleaners.innerText=cleaners(today).join(", ");
+
+ listRight.innerText=R.join(", ");
+ listLeft.innerText=L.join(", ");
 }
 
 update();
