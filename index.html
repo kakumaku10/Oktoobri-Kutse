@@ -9,12 +9,9 @@
 
 <style>
 body{
-  background-size:cover;
-  background-position:center;
-  background-attachment:fixed;
+  background:#f5f5f5;
 }
 .overlay{
-  background:rgba(255,255,255,0.82);
   min-height:100vh;
 }
 .progress-bar{
@@ -42,15 +39,9 @@ table th, table td{
 
 <!-- TABID -->
 <ul class="nav nav-tabs mb-3">
-<li class="nav-item">
-<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button>
-</li>
-<li class="nav-item">
-<button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button>
-</li>
-<li class="nav-item">
-<button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">📋 Toa korrapidaja list</button>
-</li>
+<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">📋 Toa korrapidaja list</button></li>
 </ul>
 
 <div class="tab-content">
@@ -83,12 +74,20 @@ table th, table td{
 
 <!-- TÄNA -->
 <div class="tab-pane fade" id="todayTab">
-<div class="card shadow text-center">
+<div class="card shadow text-center mb-3">
 <div class="card-body">
 <h5>🧹 Tänased korrapidajad</h5>
 <p id="todayDate" class="fw-bold"></p>
 <p><strong>Parem tuba:</strong> <span id="todayRight"></span></p>
 <p><strong>Vasak tuba:</strong> <span id="todayLeft"></span></p>
+</div>
+</div>
+
+<div class="card shadow text-center">
+<div class="card-body">
+<h5>🧽 Ala koristajad täna</h5>
+<p id="areaCleaners" class="fw-bold"></p>
+<small class="text-muted">Valitakse automaatselt iga päev</small>
 </div>
 </div>
 </div>
@@ -109,13 +108,14 @@ table th, table td{
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-/* ================== KONFIG ================== */
+/* ================== KUUPÄEVAD ================== */
 const START_DATE = new Date(2025,9,13);
 const END_DATE   = new Date(2026,5,12);
 
 const DUTY_START = new Date(2026,0,6);
 const DUTY_END   = new Date(2026,5,12);
 
+/* ================== TOAD ================== */
 const ROOMS = {
   parem: {
     label: "Parema toa korrapidaja",
@@ -127,8 +127,16 @@ const ROOMS = {
   }
 };
 
+/* ================== ALA KORISTAJAD ================== */
+const ALL_SOLDIERS = [
+ "SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI",
+ "KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"
+];
+
+const PRIORITY = ["TAMME","PINT","KOSEMAA","KUUSEORG"];
+
 /* ================== ABID ================== */
-const DAY_MS = 1000*60*60*24;
+const DAY_MS = 86400000;
 
 function nowTallinn(){
   return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
@@ -140,6 +148,33 @@ function daysBetween(a,b){
   return Math.floor((b - a) / DAY_MS);
 }
 
+/* ===== päevapõhine random ===== */
+function seededRandom(seed){
+  let x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function pickDailyCleaners(date){
+  const seedBase = Math.floor(date.getTime()/DAY_MS);
+
+  let pool=[];
+  ALL_SOLDIERS.forEach(name=>{
+    const weight = PRIORITY.includes(name)?3:1;
+    for(let i=0;i<weight;i++) pool.push(name);
+  });
+
+  let selected=new Set();
+  let i=0;
+
+  while(selected.size<8){
+    const r=seededRandom(seedBase+i);
+    const name=pool[Math.floor(r*pool.length)];
+    selected.add(name);
+    i++;
+  }
+  return Array.from(selected);
+}
+
 /* ================== UPDATE ================== */
 function update(){
   const now = nowTallinn();
@@ -149,39 +184,41 @@ function update(){
   const start = dayOnly(START_DATE);
   const end   = dayOnly(END_DATE);
 
-  const total = daysBetween(start,end) + 1;
+  const total = daysBetween(start,end)+1;
   const done  = Math.max(0, daysBetween(start,today));
-  const left  = Math.max(0, daysBetween(today,end) + 1);
+  const left  = Math.max(0, daysBetween(today,end)+1);
 
   totalDays.value = total+" päeva";
   doneDays.value  = done+" päeva";
   leftDays.value  = left+" päeva";
 
   const pct = Math.min(100,(done/total*100).toFixed(1));
-  progressBar.style.width = pct+"%";
-  progressBar.innerText = pct+"%";
+  progressBar.style.width=pct+"%";
+  progressBar.innerText=pct+"%";
 
-  const g50 = Math.round(total*0.5);
-  const g75 = Math.round(total*0.75);
+  const g50=Math.round(total*0.5);
+  const g75=Math.round(total*0.75);
   goal.value =
-    done < g50 ? `50%: ${g50-done} päeva` :
-    done < g75 ? `75%: ${g75-done} päeva` :
-    done < total ? `100%: ${total-done} päeva` :
-    "VALMIS";
+    done<g50?`50%: ${g50-done} päeva`:
+    done<g75?`75%: ${g75-done} päeva`:
+    done<total?`100%: ${total-done} päeva`:"VALMIS";
 
-  const dutyIndex = daysBetween(dayOnly(DUTY_START), today);
-  todayDate.innerText = today.toLocaleDateString("et-EE");
-  todayRight.innerText = ROOMS.parem.names[dutyIndex % ROOMS.parem.names.length];
-  todayLeft.innerText  = ROOMS.vasak.names[dutyIndex % ROOMS.vasak.names.length];
+  const dutyIndex=daysBetween(dayOnly(DUTY_START),today);
+  todayDate.innerText=today.toLocaleDateString("et-EE");
+  todayRight.innerText=ROOMS.parem.names[dutyIndex%ROOMS.parem.names.length];
+  todayLeft.innerText=ROOMS.vasak.names[dutyIndex%ROOMS.vasak.names.length];
+
+  /* ala koristajad */
+  const cleaners=pickDailyCleaners(today);
+  areaCleaners.innerText=cleaners.join(", ");
 }
 
 /* ================== LISTID ================== */
 function buildLists(){
-  let html="", acc=0;
-
+  let html="",acc=0;
   for(const key in ROOMS){
-    const room = ROOMS[key];
-    html += `
+    const room=ROOMS[key];
+    html+=`
     <div class="accordion-item">
       <h2 class="accordion-header">
         <button class="accordion-button ${acc?"collapsed":""}"
@@ -197,15 +234,14 @@ function buildLists(){
 
     let i=0;
     for(let d=new Date(DUTY_START); d<=DUTY_END; d.setDate(d.getDate()+1)){
-      html += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i % room.names.length]}</td></tr>`;
+      html+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i%room.names.length]}</td></tr>`;
       i++;
     }
 
-    html += `</tbody></table></div></div></div>`;
+    html+=`</tbody></table></div></div></div>`;
     acc++;
   }
-
-  roomsAccordion.innerHTML = html;
+  roomsAccordion.innerHTML=html;
 }
 
 /* ================== START ================== */
