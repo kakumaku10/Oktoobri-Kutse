@@ -34,7 +34,6 @@ table th, table td{text-align:center;font-size:14px;}
 
 <div class="tab-content">
 
-<!-- EDENEMINE -->
 <div class="tab-pane fade show active" id="progressTab">
 <div class="card shadow">
 <div class="card-body">
@@ -56,7 +55,6 @@ table th, table td{text-align:center;font-size:14px;}
 </div>
 </div>
 
-<!-- TÄNA -->
 <div class="tab-pane fade" id="todayTab">
 <div class="card shadow text-center">
 <div class="card-body">
@@ -68,14 +66,11 @@ table th, table td{text-align:center;font-size:14px;}
 </div>
 </div>
 
-<!-- LISTID KÕRVUTI -->
 <div class="tab-pane fade" id="listTab">
 <div class="card shadow mb-4">
 <div class="card-body">
 <h5 class="text-center mb-4">📋 Toa korrapidaja list</h5>
 <div class="row">
-
-<!-- VASAK -->
 <div class="col-md-6">
 <h6 class="text-center">Vasak tuba</h6>
 <table class="table table-bordered table-striped">
@@ -83,8 +78,6 @@ table th, table td{text-align:center;font-size:14px;}
 <tbody id="excelLeft"></tbody>
 </table>
 </div>
-
-<!-- PAREM -->
 <div class="col-md-6">
 <h6 class="text-center">Parem tuba</h6>
 <table class="table table-bordered table-striped">
@@ -92,13 +85,11 @@ table th, table td{text-align:center;font-size:14px;}
 <tbody id="excelRight"></tbody>
 </table>
 </div>
-
 </div>
 </div>
 </div>
 </div>
 
-<!-- ALA KORISTAJAD -->
 <div class="tab-pane fade" id="areaTab">
 <div class="card shadow text-center">
 <div class="card-body">
@@ -109,116 +100,77 @@ table th, table td{text-align:center;font-size:14px;}
 </div>
 
 </div> <!-- tab-content -->
-
 </div> <!-- container -->
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-/* ---------- KUUPÄEVAD ---------- */
-const START_DATE=new Date(2025,9,13);
-const END_DATE=new Date(2026,5,12);
-const DUTY_START=new Date(2026,0,6);
-const DAY=86400000;
+const START_DATE = new Date(2025,9,13);
+const END_DATE = new Date(2026,5,12);
+const DUTY_START = new Date(2026,0,6);
+const DAY = 86400000;
 
-/* ---------- NIMED ---------- */
-const LEFT=["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL","MARK","KRISTI","ARU"];
-const RIGHT=["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
-const ALL=[...LEFT,...RIGHT];
+const LEFT = ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL","MARK","KRISTI","ARU"];
+const RIGHT = ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
+const ALL = [...LEFT,...RIGHT];
 
-/* ---------- Ala Korrapidajad---------- */
-function isPriority(name){
- let s=0; for(let i=0;i<name.length;i++) s+=name.charCodeAt(i)*(i+5);
- return s%11===7 && name.length%2===0;
-}
-
-/* ---------- ABI ---------- */
 function tallinnNow(){return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));}
 function day(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function diff(a,b){return Math.floor((b-a)/DAY);}
-function seeded(x){let v=Math.sin(x)*10000;return v-Math.floor(v);}
+function seeded(x){return Math.sin(x)*10000-Math.floor(Math.sin(x)*10000);}
 
-/* ---------- PÄEVAD ---------- */
 function calcDays(){
- const today=day(tallinnNow());
- const total=diff(day(START_DATE),day(END_DATE))+1;
- const done=Math.max(0,diff(day(START_DATE),today));
- const left=Math.max(0,diff(today,day(END_DATE))+1);
+ const today = day(tallinnNow());
+ const total = diff(day(START_DATE), day(END_DATE))+1;
+ const done = Math.max(0,diff(day(START_DATE), today));
+ const left = Math.max(0,diff(today, day(END_DATE))+1);
  return {today,total,done,left};
 }
 
-/* ---------- KORRAPIDAJAD ---------- */
 function duty(list,today){
- const i=diff(day(DUTY_START),today);
+ const i = diff(day(DUTY_START), today);
  return list[(i%list.length+list.length)%list.length];
 }
 
-/* ---------- ALA KORISTAJAD ---------- */
 function areaCleaners(today){
- const start=day(START_DATE);
- let prev=[],res=[];
- for(let d=new Date(start);d<=today;d.setDate(d.getDate()+1)){
-  const seed=diff(start,d)+555;
-  let pool=[];
-  ALL.forEach(n=>{
-   let w=1;
-   if(isPriority(n)) w=2;
-   if(prev.includes(n)) w=0;
-   for(let i=0;i<w;i++) pool.push(n);
-  });
-  if(pool.length<8) pool=[...ALL];
-  let set=new Set(),i=0;
-  while(set.size<8){
-   set.add(pool[Math.floor(seeded(seed+i)*pool.length)]);
-   i++;
-  }
-  // 
-  let pr=[...set].filter(isPriority);
-  if(pr.length>2){
-    let normal=[...set].filter(n=>!isPriority(n));
-    set=new Set(normal);
-    while(set.size<8){
-      const n=ALL[Math.floor(seeded(seed+200+i)*ALL.length)];
-      if(!isPriority(n)) set.add(n);
-      i++;
-    }
-  }
-  res=[...set]; prev=res;
+ const seed = diff(day(START_DATE), today)+1;
+ let res = [];
+ while(res.length<8){
+   const n = ALL[Math.floor(seeded(seed+res.length)*ALL.length)];
+   if(!res.includes(n)) res.push(n);
  }
  return res;
 }
 
-/* ---------- UPDATE ---------- */
 function updateAll(){
- const now=tallinnNow();
- clock.innerText=now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
+ const now = tallinnNow();
+ clock.innerText = now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
- const {today,total,done,left}=calcDays();
- totalDays.value="Kogu periood: "+total+" päeva";
- doneDays.value="Tehtud: "+done+" päeva";
- leftDays.value="Jäänud: "+left+" päeva";
+ const {today,total,done,left} = calcDays();
+ totalDays.value = total+" päeva";
+ doneDays.value = done+" päeva";
+ leftDays.value = left+" päeva";
 
- const pct=Math.min(100,(done/total*100).toFixed(1));
- progressBar.style.width=pct+"%"; progressBar.innerText=pct+"%";
+ const pct = Math.min(100,(done/total*100).toFixed(1));
+ progressBar.style.width = pct+"%";
+ progressBar.innerText = pct+"%";
 
- const g50=Math.round(total*0.5); const g75=Math.round(total*0.75);
- goal.value=done<g50?`50%: ${g50-done} päeva`:
-             done<g75?`75%: ${g75-done} päeva`:
-             done<total?`100%: ${total-done} päeva`:"VALMIS";
+ const g50 = Math.round(total*0.5); const g75 = Math.round(total*0.75);
+ goal.value = done<g50?`50%: ${g50-done} päeva`:
+              done<g75?`75%: ${g75-done} päeva`:
+              done<total?`100%: ${total-done} päeva`:"VALMIS";
 
- todayDate.innerText=today.toLocaleDateString("et-EE");
- leftToday.innerText=duty(LEFT,today);
- rightToday.innerText=duty(RIGHT,today);
- areaCleaners.innerText=areaCleaners(today).join(", ");
-
+ todayDate.innerText = today.toLocaleDateString("et-EE");
+ leftToday.innerText = duty(LEFT, today);
+ rightToday.innerText = duty(RIGHT, today);
+ areaCleaners.innerText = areaCleaners(today).join(", ");
 }
 
-/* ---------- EXCEL TABEL ---------- */
 function fillTables(){
  let i=0;
- for(let d=new Date(DUTY_START); d<=DUTY_END; d.setDate(d.getDate()+1)){
-   excelLeft.innerHTML+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${LEFT[i%LEFT.length]}</td></tr>`;
-   excelRight.innerHTML+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${RIGHT[i%RIGHT.length]}</td></tr>`;
+ for(let d=new Date(DUTY_START); d<=END_DATE; d.setDate(d.getDate()+1)){
+   excelLeft.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${LEFT[i%LEFT.length]}</td></tr>`;
+   excelRight.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${RIGHT[i%RIGHT.length]}</td></tr>`;
    i++;
  }
 }
@@ -226,7 +178,7 @@ function fillTables(){
 fillTables();
 updateAll();
 setInterval(updateAll,1000);
-
 </script>
+
 </body>
 </html>
