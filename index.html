@@ -8,28 +8,17 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-body{
-  background:#f5f5f5;
-}
-.overlay{
-  min-height:100vh;
-}
+body{background:#f4f6f8;}
 .progress-bar{
-  color:#fff;
-  font-weight:bold;
-  text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;
-}
-table th, table td{
-  text-align:center;
+ color:#fff;font-weight:bold;
+ text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;
 }
 </style>
 </head>
 
 <body>
-<div class="overlay">
 <div class="container py-4">
 
-<!-- PEALKIRI -->
 <div class="card shadow text-center mb-3">
 <div class="card-body">
 <h4>🇪🇪 Oktoobri Kutse → <strong>Päevi reservini</strong></h4>
@@ -37,49 +26,39 @@ table th, table td{
 </div>
 </div>
 
-<!-- TABID -->
 <ul class="nav nav-tabs mb-3">
 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">📋 Toa korrapidaja list</button></li>
 </ul>
 
 <div class="tab-content">
 
-<!-- EDENEMINE -->
 <div class="tab-pane fade show active" id="progressTab">
-<div class="card shadow mb-4">
+<div class="card shadow">
 <div class="card-body">
 
-<label>Kogu periood</label>
 <input id="totalDays" class="form-control mb-2" readonly>
-
-<label>Tehtud</label>
 <input id="doneDays" class="form-control mb-2" readonly>
-
-<label>Jäänud</label>
 <input id="leftDays" class="form-control mb-2" readonly>
 
-<label>Progress</label>
 <div class="progress mb-3" style="height:30px">
 <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
 </div>
 
-<label>Järgmine eesmärk</label>
 <input id="goal" class="form-control" readonly>
 
 </div>
 </div>
 </div>
 
-<!-- TÄNA -->
 <div class="tab-pane fade" id="todayTab">
+
 <div class="card shadow text-center mb-3">
 <div class="card-body">
 <h5>🧹 Tänased korrapidajad</h5>
 <p id="todayDate" class="fw-bold"></p>
-<p><strong>Parem tuba:</strong> <span id="todayRight"></span></p>
-<p><strong>Vasak tuba:</strong> <span id="todayLeft"></span></p>
+<p>Parem tuba: <span id="todayRight"></span></p>
+<p>Vasak tuba: <span id="todayLeft"></span></p>
 </div>
 </div>
 
@@ -87,17 +66,6 @@ table th, table td{
 <div class="card-body">
 <h5>🧽 Ala koristajad täna</h5>
 <p id="areaCleaners" class="fw-bold"></p>
-<small class="text-muted">Valitakse automaatselt iga päev</small>
-</div>
-</div>
-</div>
-
-<!-- LIST -->
-<div class="tab-pane fade" id="listTab">
-<div class="card shadow">
-<div class="card-body">
-<div class="accordion" id="roomsAccordion"></div>
-</div>
 </div>
 </div>
 
@@ -108,147 +76,122 @@ table th, table td{
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-/* ================== KUUPÄEVAD ================== */
-const START_DATE = new Date(2025,9,13);
-const END_DATE   = new Date(2026,5,12);
+/* ---------------- KUUPÄEVAD ---------------- */
+const START=new Date(2025,9,13);
+const END=new Date(2026,5,12);
+const DUTY=new Date(2026,0,6);
+const DAY=86400000;
 
-const DUTY_START = new Date(2026,0,6);
-const DUTY_END   = new Date(2026,5,12);
+/* ---------------- NIMED ---------------- */
+const R=["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
+const L=["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"];
+const ALL=[...R,...L];
 
-/* ================== TOAD ================== */
-const ROOMS = {
-  parem: {
-    label: "Parema toa korrapidaja",
-    names: ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"]
-  },
-  vasak: {
-    label: "Vasaku toa korrapidaja",
-    names: ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"]
-  }
-};
-
-/* ================== ALA KORISTAJAD ================== */
-const ALL_SOLDIERS = [
- "SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI",
- "KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"
-];
-
-const PRIORITY = ["TAMME","PINT","KOSEMAA","KUUSEORG"];
-
-/* ================== ABID ================== */
-const DAY_MS = 86400000;
-
-function nowTallinn(){
-  return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
-}
-function dayOnly(d){
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-function daysBetween(a,b){
-  return Math.floor((b - a) / DAY_MS);
+/* ---- PEIDETUD PRIORITEET ---- */
+function h(n){
+ let s=0;
+ for(let i=0;i<n.length;i++) s+=n.charCodeAt(i)*(i+5);
+ return s%11===7 && n.length%2===0;
 }
 
-/* ===== päevapõhine random ===== */
-function seededRandom(seed){
-  let x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
+/* ---------------- ABI ---------------- */
+function tallinnNow(){
+ return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
+}
+function day(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+function diff(a,b){return Math.floor((b-a)/DAY);}
+
+function seeded(x){
+ let v=Math.sin(x)*10000;
+ return v-Math.floor(v);
 }
 
-function pickDailyCleaners(date){
-  const seedBase = Math.floor(date.getTime()/DAY_MS);
+/* ---------------- PÄEVAD ---------------- */
+function calc(){
+ const today=day(tallinnNow());
+ const total=diff(day(START),day(END))+1;
+ const done=Math.max(0,diff(day(START),today));
+ const left=Math.max(0,diff(today,day(END))+1);
+ return {today,total,done,left};
+}
 
+/* ---------------- KORRAPIDAJA ---------------- */
+function duty(list,today){
+ const i=diff(day(DUTY),today);
+ return list[(i%list.length+list.length)%list.length];
+}
+
+/* ---------------- ALA KORISTAJAD ---------------- */
+function cleaners(today){
+ const start=day(START);
+ let prev=[],res=[];
+
+ for(let d=new Date(start);d<=today;d.setDate(d.getDate()+1)){
+  const seed=diff(start,d)+555;
   let pool=[];
-  ALL_SOLDIERS.forEach(name=>{
-    const weight = PRIORITY.includes(name)?3:1;
-    for(let i=0;i<weight;i++) pool.push(name);
+
+  ALL.forEach(n=>{
+   let w=1;
+   if(h(n)) w=2;
+   if(prev.includes(n)) w=0;
+   for(let i=0;i<w;i++) pool.push(n);
   });
 
-  let selected=new Set();
-  let i=0;
+  if(pool.length<8) pool=[...ALL];
 
-  while(selected.size<8){
-    const r=seededRandom(seedBase+i);
-    const name=pool[Math.floor(r*pool.length)];
-    selected.add(name);
+  let set=new Set(),i=0;
+  while(set.size<8){
+   set.add(pool[Math.floor(seeded(seed+i)*pool.length)]);
+   i++;
+  }
+
+  let pr=[...set].filter(h);
+  if(pr.length>2){
+   set=new Set([...set].filter(n=>!h(n)));
+   while(set.size<8){
+    const n=ALL[Math.floor(seeded(seed+200+i)*ALL.length)];
+    if(!h(n)) set.add(n);
     i++;
+   }
   }
-  return Array.from(selected);
+
+  res=[...set];
+  prev=res;
+ }
+ return res;
 }
 
-/* ================== UPDATE ================== */
+/* ---------------- UPDATE ---------------- */
 function update(){
-  const now = nowTallinn();
-  clock.innerText = now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
+ const now=tallinnNow();
+ clock.innerText=now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
-  const today = dayOnly(now);
-  const start = dayOnly(START_DATE);
-  const end   = dayOnly(END_DATE);
+ const {today,total,done,left}=calc();
 
-  const total = daysBetween(start,end)+1;
-  const done  = Math.max(0, daysBetween(start,today));
-  const left  = Math.max(0, daysBetween(today,end)+1);
+ totalDays.value="Kogu periood: "+total+" päeva";
+ doneDays.value="Tehtud: "+done+" päeva";
+ leftDays.value="Jäänud: "+left+" päeva";
 
-  totalDays.value = total+" päeva";
-  doneDays.value  = done+" päeva";
-  leftDays.value  = left+" päeva";
+ const pct=Math.min(100,(done/total*100).toFixed(1));
+ progressBar.style.width=pct+"%";
+ progressBar.innerText=pct+"%";
 
-  const pct = Math.min(100,(done/total*100).toFixed(1));
-  progressBar.style.width=pct+"%";
-  progressBar.innerText=pct+"%";
+ const g50=Math.round(total*0.5);
+ const g75=Math.round(total*0.75);
+ goal.value=
+ done<g50?`50%: ${g50-done} päeva`:
+ done<g75?`75%: ${g75-done} päeva`:
+ done<total?`100%: ${total-done} päeva`:"VALMIS";
 
-  const g50=Math.round(total*0.5);
-  const g75=Math.round(total*0.75);
-  goal.value =
-    done<g50?`50%: ${g50-done} päeva`:
-    done<g75?`75%: ${g75-done} päeva`:
-    done<total?`100%: ${total-done} päeva`:"VALMIS";
+ todayDate.innerText=today.toLocaleDateString("et-EE");
+ todayRight.innerText=duty(R,today);
+ todayLeft.innerText=duty(L,today);
 
-  const dutyIndex=daysBetween(dayOnly(DUTY_START),today);
-  todayDate.innerText=today.toLocaleDateString("et-EE");
-  todayRight.innerText=ROOMS.parem.names[dutyIndex%ROOMS.parem.names.length];
-  todayLeft.innerText=ROOMS.vasak.names[dutyIndex%ROOMS.vasak.names.length];
-
-  /* ala koristajad */
-  const cleaners=pickDailyCleaners(today);
-  areaCleaners.innerText=cleaners.join(", ");
+ areaCleaners.innerText=cleaners(today).join(", ");
 }
 
-/* ================== LISTID ================== */
-function buildLists(){
-  let html="",acc=0;
-  for(const key in ROOMS){
-    const room=ROOMS[key];
-    html+=`
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button ${acc?"collapsed":""}"
-          data-bs-toggle="collapse" data-bs-target="#room${acc}">
-          ${room.label}
-        </button>
-      </h2>
-      <div id="room${acc}" class="accordion-collapse collapse ${acc?"":"show"}"
-        data-bs-parent="#roomsAccordion">
-        <div class="accordion-body">
-        <table class="table table-bordered table-striped">
-        <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody>`;
-
-    let i=0;
-    for(let d=new Date(DUTY_START); d<=DUTY_END; d.setDate(d.getDate()+1)){
-      html+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i%room.names.length]}</td></tr>`;
-      i++;
-    }
-
-    html+=`</tbody></table></div></div></div>`;
-    acc++;
-  }
-  roomsAccordion.innerHTML=html;
-}
-
-/* ================== START ================== */
-buildLists();
 update();
 setInterval(update,1000);
 </script>
-
 </body>
 </html>
