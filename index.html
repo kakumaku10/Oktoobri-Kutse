@@ -14,7 +14,6 @@ table th, table td{text-align:center;font-size:14px;}
 .nav-tabs .nav-link{color:#000;}
 </style>
 </head>
-
 <body>
 <div class="container py-4">
 
@@ -37,7 +36,6 @@ table th, table td{text-align:center;font-size:14px;}
 <div class="tab-pane fade show active" id="progressTab">
 <div class="card shadow">
 <div class="card-body">
-
 <label>Kogu periood</label>
 <input id="totalDays" class="form-control mb-2" readonly>
 <label>Tehtud</label>
@@ -50,7 +48,6 @@ table th, table td{text-align:center;font-size:14px;}
 </div>
 <label>Järgmine eesmärk</label>
 <input id="goal" class="form-control" readonly>
-
 </div>
 </div>
 </div>
@@ -73,17 +70,11 @@ table th, table td{text-align:center;font-size:14px;}
 <div class="row">
 <div class="col-md-6">
 <h6 class="text-center">Vasak tuba</h6>
-<table class="table table-bordered table-striped">
-<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead>
-<tbody id="excelLeft"></tbody>
-</table>
+<div id="excelLeft"></div>
 </div>
 <div class="col-md-6">
 <h6 class="text-center">Parem tuba</h6>
-<table class="table table-bordered table-striped">
-<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead>
-<tbody id="excelRight"></tbody>
-</table>
+<div id="excelRight"></div>
 </div>
 </div>
 </div>
@@ -99,11 +90,10 @@ table th, table td{text-align:center;font-size:14px;}
 </div>
 </div>
 
-</div> <!-- tab-content -->
-</div> <!-- container -->
+</div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
 const START_DATE = new Date(2025,9,13);
 const END_DATE = new Date(2026,5,12);
@@ -114,7 +104,7 @@ const LEFT = ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO",
 const RIGHT = ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
 const ALL = [...LEFT,...RIGHT];
 
-function tallinnNow(){return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));}
+function tallinnNow(){try{return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));}catch(e){return new Date();}}
 function day(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function diff(a,b){return Math.floor((b-a)/DAY);}
 function seeded(x){return Math.sin(x)*10000-Math.floor(Math.sin(x)*10000);}
@@ -166,18 +156,36 @@ function updateAll(){
  areaCleaners.innerText = areaCleaners(today).join(", ");
 }
 
+// ------------- TABELID 30 PÄEVA KORRAGA ----------------
 function fillTables(){
- let i=0;
- for(let d=new Date(DUTY_START); d<=END_DATE; d.setDate(d.getDate()+1)){
-   excelLeft.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${LEFT[i%LEFT.length]}</td></tr>`;
-   excelRight.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${RIGHT[i%RIGHT.length]}</td></tr>`;
-   i++;
+ const leftContainer = document.getElementById("excelLeft");
+ const rightContainer = document.getElementById("excelRight");
+ const listLeft = LEFT;
+ const listRight = RIGHT;
+ let d = new Date(DUTY_START);
+ while(d <= END_DATE){
+   const leftTable = document.createElement("table");
+   leftTable.className="table table-bordered table-striped mb-2";
+   const rightTable = document.createElement("table");
+   rightTable.className="table table-bordered table-striped mb-2";
+   leftTable.innerHTML="<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody></tbody>";
+   rightTable.innerHTML="<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody></tbody>";
+   for(let i=0;i<30 && d<=END_DATE;i++){
+     const idx = diff(DUTY_START,d);
+     const trLeft = `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${listLeft[idx%listLeft.length]}</td></tr>`;
+     const trRight = `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${listRight[idx%listRight.length]}</td></tr>`;
+     leftTable.querySelector("tbody").innerHTML += trLeft;
+     rightTable.querySelector("tbody").innerHTML += trRight;
+     d.setDate(d.getDate()+1);
+   }
+   leftContainer.appendChild(leftTable);
+   rightContainer.appendChild(rightTable);
  }
 }
 
 fillTables();
 updateAll();
-setInterval(updateAll,1000);
+setInterval(updateAll,60000); // uuendab iga minut
 </script>
 
 </body>
