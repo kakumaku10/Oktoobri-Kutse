@@ -8,7 +8,6 @@
 <style>
 body{background:#f4f6f8;}
 .progress-bar{color:#fff;font-weight:bold;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;}
-table th, table td{text-align:center;font-size:14px;}
 .card{background:#fff;color:#000;}
 .nav-tabs .nav-link{color:#000;}
 </style>
@@ -26,7 +25,6 @@ table th, table td{text-align:center;font-size:14px;}
 <ul class="nav nav-tabs mb-3">
 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Tänased korrapidajad</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">👥 Toa nimekirjad</button></li>
 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#areaTab">🧽 Ala koristajad</button></li>
 </ul>
 
@@ -58,24 +56,6 @@ table th, table td{text-align:center;font-size:14px;}
 <p id="todayDate" class="fw-bold"></p>
 <p><strong>Vasak tuba:</strong> <span id="leftToday"></span></p>
 <p><strong>Parem tuba:</strong> <span id="rightToday"></span></p>
-</div>
-</div>
-</div>
-
-<div class="tab-pane fade" id="listTab">
-<div class="card shadow mb-4">
-<div class="card-body">
-<h5 class="text-center mb-4">📋 Toa korrapidaja list</h5>
-<div class="row">
-<div class="col-md-6">
-<h6 class="text-center">Vasak tuba</h6>
-<div id="excelLeft"></div>
-</div>
-<div class="col-md-6">
-<h6 class="text-center">Parem tuba</h6>
-<div id="excelRight"></div>
-</div>
-</div>
 </div>
 </div>
 </div>
@@ -154,40 +134,8 @@ function updateAll(){
  areaCleaners.innerText = areaCleaners(today).join(", ");
 }
 
-// ------------- TABELID 30 PÄEVA KORRAGA ----------------
-function fillTables(){
- const leftContainer = document.getElementById("excelLeft");
- const rightContainer = document.getElementById("excelRight");
- const listLeft = LEFT;
- const listRight = RIGHT;
- let d = new Date(DUTY_START);
-
- while(d <= END_DATE){
-   const leftTable = document.createElement("table");
-   leftTable.className="table table-bordered table-striped mb-2";
-   const rightTable = document.createElement("table");
-   rightTable.className="table table-bordered table-striped mb-2";
-
-   leftTable.innerHTML="<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody></tbody>";
-   rightTable.innerHTML="<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody></tbody>";
-
-   const leftBody = leftTable.querySelector("tbody");
-   const rightBody = rightTable.querySelector("tbody");
-
-   for(let i=0;i<30 && d<=END_DATE;i++){
-     const idx = diff(DUTY_START,d);
-     leftBody.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${listLeft[idx%listLeft.length]}</td></tr>`;
-     rightBody.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${listRight[idx%listRight.length]}</td></tr>`;
-     d.setDate(d.getDate()+1);
-   }
-   leftContainer.appendChild(leftTable);
-   rightContainer.appendChild(rightTable);
- }
-}
-
-fillTables();
 updateAll();
-setInterval(updateAll,60000);
+setInterval(updateAll,60000); // uuendab iga minut
 </script>
 </body>
 </html>
