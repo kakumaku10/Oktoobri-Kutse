@@ -32,7 +32,6 @@ table th, table td{text-align:center;font-size:14px;}
 
 <div class="tab-content">
 
-<!-- EDENEMINE -->
 <div class="tab-pane fade show active" id="progressTab">
 <div class="card shadow">
 <div class="card-body">
@@ -52,7 +51,6 @@ table th, table td{text-align:center;font-size:14px;}
 </div>
 </div>
 
-<!-- TÄNA -->
 <div class="tab-pane fade" id="todayTab">
 <div class="card shadow text-center">
 <div class="card-body">
@@ -64,7 +62,6 @@ table th, table td{text-align:center;font-size:14px;}
 </div>
 </div>
 
-<!-- TOA LIST -->
 <div class="tab-pane fade" id="listTab">
 <div class="card shadow mb-4">
 <div class="card-body">
@@ -83,7 +80,6 @@ table th, table td{text-align:center;font-size:14px;}
 </div>
 </div>
 
-<!-- ALA KORISTAJAD -->
 <div class="tab-pane fade" id="areaTab">
 <div class="card shadow text-center">
 <div class="card-body">
@@ -107,7 +103,6 @@ const LEFT = ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO",
 const RIGHT = ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
 const ALL = [...LEFT,...RIGHT];
 
-// iOS compat
 function tallinnNow(){try{return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));}catch(e){return new Date();}}
 function day(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function diff(a,b){return Math.floor((b-a)/DAY);}
@@ -159,7 +154,7 @@ function updateAll(){
  areaCleaners.innerText = areaCleaners(today).join(", ");
 }
 
-// TABELID BATCH RENDER 30 PÄEVA KORRAGA
+// TABELID 30 PÄEVA KORRAGA
 function fillTables(){
  const leftContainer = document.getElementById("excelLeft");
  const rightContainer = document.getElementById("excelRight");
@@ -190,7 +185,7 @@ function fillTables(){
 
 fillTables();
 updateAll();
-setInterval(updateAll,60000); // uuendab iga minut
+setInterval(updateAll,60000);
 </script>
 </body>
 </html>
