@@ -8,6 +8,7 @@
 <style>
 body{background:#f4f6f8;}
 .progress-bar{color:#fff;font-weight:bold;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;}
+table th, table td{text-align:center;font-size:14px;}
 .card{background:#fff;color:#000;}
 .nav-tabs .nav-link{color:#000;}
 </style>
@@ -25,11 +26,13 @@ body{background:#f4f6f8;}
 <ul class="nav nav-tabs mb-3">
 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Tänased korrapidajad</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">👥 Toa nimekirjad</button></li>
 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#areaTab">🧽 Ala koristajad</button></li>
 </ul>
 
 <div class="tab-content">
 
+<!-- EDENEMINE -->
 <div class="tab-pane fade show active" id="progressTab">
 <div class="card shadow">
 <div class="card-body">
@@ -49,6 +52,7 @@ body{background:#f4f6f8;}
 </div>
 </div>
 
+<!-- TÄNA -->
 <div class="tab-pane fade" id="todayTab">
 <div class="card shadow text-center">
 <div class="card-body">
@@ -60,6 +64,26 @@ body{background:#f4f6f8;}
 </div>
 </div>
 
+<!-- TOA LIST -->
+<div class="tab-pane fade" id="listTab">
+<div class="card shadow mb-4">
+<div class="card-body">
+<h5 class="text-center mb-4">📋 Toa korrapidaja list</h5>
+<div class="row">
+<div class="col-md-6">
+<h6 class="text-center">Vasak tuba</h6>
+<div id="excelLeft"></div>
+</div>
+<div class="col-md-6">
+<h6 class="text-center">Parem tuba</h6>
+<div id="excelRight"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ALA KORISTAJAD -->
 <div class="tab-pane fade" id="areaTab">
 <div class="card shadow text-center">
 <div class="card-body">
@@ -83,6 +107,7 @@ const LEFT = ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO",
 const RIGHT = ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
 const ALL = [...LEFT,...RIGHT];
 
+// iOS compat
 function tallinnNow(){try{return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));}catch(e){return new Date();}}
 function day(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function diff(a,b){return Math.floor((b-a)/DAY);}
@@ -134,6 +159,36 @@ function updateAll(){
  areaCleaners.innerText = areaCleaners(today).join(", ");
 }
 
+// TABELID BATCH RENDER 30 PÄEVA KORRAGA
+function fillTables(){
+ const leftContainer = document.getElementById("excelLeft");
+ const rightContainer = document.getElementById("excelRight");
+ let d = new Date(DUTY_START);
+
+ while(d <= END_DATE){
+   const leftTable = document.createElement("table");
+   leftTable.className="table table-bordered table-striped mb-2";
+   const rightTable = document.createElement("table");
+   rightTable.className="table table-bordered table-striped mb-2";
+
+   leftTable.innerHTML="<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody></tbody>";
+   rightTable.innerHTML="<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody></tbody>";
+
+   const leftBody = leftTable.querySelector("tbody");
+   const rightBody = rightTable.querySelector("tbody");
+
+   for(let i=0;i<30 && d<=END_DATE;i++){
+     const idx = diff(DUTY_START,d);
+     leftBody.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${LEFT[idx%LEFT.length]}</td></tr>`;
+     rightBody.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${RIGHT[idx%RIGHT.length]}</td></tr>`;
+     d.setDate(d.getDate()+1);
+   }
+   leftContainer.appendChild(leftTable);
+   rightContainer.appendChild(rightTable);
+ }
+}
+
+fillTables();
 updateAll();
 setInterval(updateAll,60000); // uuendab iga minut
 </script>
