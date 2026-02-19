@@ -5,7 +5,6 @@
 <title>Oktoobri Kutse</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
 <style>
 body{background:#f4f6f8;}
 .progress-bar{color:#fff;font-weight:bold;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;}
@@ -107,7 +106,6 @@ const ALL = [...LEFT,...RIGHT];
 function tallinnNow(){try{return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));}catch(e){return new Date();}}
 function day(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function diff(a,b){return Math.floor((b-a)/DAY);}
-function seeded(x){return Math.sin(x)*10000-Math.floor(Math.sin(x)*10000);}
 
 function calcDays(){
  const today = day(tallinnNow());
@@ -126,7 +124,7 @@ function areaCleaners(today){
  const seed = diff(day(START_DATE), today)+1;
  let res = [];
  while(res.length<8){
-   const n = ALL[Math.floor(seeded(seed+res.length)*ALL.length)];
+   const n = ALL[Math.floor(Math.sin(seed+res.length)*10000%ALL.length)];
    if(!res.includes(n)) res.push(n);
  }
  return res;
@@ -163,19 +161,23 @@ function fillTables(){
  const listLeft = LEFT;
  const listRight = RIGHT;
  let d = new Date(DUTY_START);
+
  while(d <= END_DATE){
    const leftTable = document.createElement("table");
    leftTable.className="table table-bordered table-striped mb-2";
    const rightTable = document.createElement("table");
    rightTable.className="table table-bordered table-striped mb-2";
+
    leftTable.innerHTML="<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody></tbody>";
    rightTable.innerHTML="<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody></tbody>";
+
+   const leftBody = leftTable.querySelector("tbody");
+   const rightBody = rightTable.querySelector("tbody");
+
    for(let i=0;i<30 && d<=END_DATE;i++){
      const idx = diff(DUTY_START,d);
-     const trLeft = `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${listLeft[idx%listLeft.length]}</td></tr>`;
-     const trRight = `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${listRight[idx%listRight.length]}</td></tr>`;
-     leftTable.querySelector("tbody").innerHTML += trLeft;
-     rightTable.querySelector("tbody").innerHTML += trRight;
+     leftBody.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${listLeft[idx%listLeft.length]}</td></tr>`;
+     rightBody.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${listRight[idx%listRight.length]}</td></tr>`;
      d.setDate(d.getDate()+1);
    }
    leftContainer.appendChild(leftTable);
@@ -185,8 +187,7 @@ function fillTables(){
 
 fillTables();
 updateAll();
-setInterval(updateAll,60000); // uuendab iga minut
+setInterval(updateAll,60000);
 </script>
-
 </body>
 </html>
