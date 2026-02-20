@@ -4,15 +4,18 @@
 <meta charset="UTF-8">
 <title>Oktoobri Kutse</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
 <style>
-body{background:#f4f6f8;}
-.progress-bar{color:#fff;font-weight:bold;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;}
-table th, table td{text-align:center;font-size:14px;}
-.card{background:#fff;color:#000;}
-.nav-tabs .nav-link{color:#000;}
+body{background:#f5f5f5;}
+.progress-bar{
+ color:#fff;font-weight:bold;
+ text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;
+}
 </style>
 </head>
+
 <body>
 <div class="container py-4">
 
@@ -25,9 +28,7 @@ table th, table td{text-align:center;font-size:14px;}
 
 <ul class="nav nav-tabs mb-3">
 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Tänased korrapidajad</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">👥 Toa nimekirjad</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#areaTab">🧽 Ala koristajad</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
 </ul>
 
 <div class="tab-content">
@@ -35,157 +36,166 @@ table th, table td{text-align:center;font-size:14px;}
 <div class="tab-pane fade show active" id="progressTab">
 <div class="card shadow">
 <div class="card-body">
-<label>Kogu periood</label>
+
 <input id="totalDays" class="form-control mb-2" readonly>
-<label>Tehtud</label>
 <input id="doneDays" class="form-control mb-2" readonly>
-<label>Jäänud</label>
 <input id="leftDays" class="form-control mb-2" readonly>
-<label>Progress</label>
+
 <div class="progress mb-3" style="height:30px">
 <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
 </div>
-<label>Järgmine eesmärk</label>
+
 <input id="goal" class="form-control" readonly>
+
 </div>
 </div>
 </div>
 
 <div class="tab-pane fade" id="todayTab">
-<div class="card shadow text-center">
+
+<div class="card shadow text-center mb-3">
 <div class="card-body">
 <h5>🧹 Tänased korrapidajad</h5>
 <p id="todayDate" class="fw-bold"></p>
-<p><strong>Vasak tuba:</strong> <span id="leftToday"></span></p>
-<p><strong>Parem tuba:</strong> <span id="rightToday"></span></p>
-</div>
-</div>
-</div>
-
-<div class="tab-pane fade" id="listTab">
-<div class="card shadow mb-4">
-<div class="card-body">
-<h5 class="text-center mb-4">📋 Toa korrapidaja list</h5>
-<div class="row">
-<div class="col-md-6">
-<h6 class="text-center">Vasak tuba</h6>
-<div id="excelLeft"></div>
-</div>
-<div class="col-md-6">
-<h6 class="text-center">Parem tuba</h6>
-<div id="excelRight"></div>
-</div>
-</div>
-</div>
+<p>Parem tuba: <span id="todayRight"></span></p>
+<p>Vasak tuba: <span id="todayLeft"></span></p>
 </div>
 </div>
 
-<div class="tab-pane fade" id="areaTab">
 <div class="card shadow text-center">
 <div class="card-body">
 <h5>🧽 Ala koristajad täna</h5>
 <p id="areaCleaners" class="fw-bold"></p>
 </div>
 </div>
-</div>
 
+</div>
 </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-const START_DATE = new Date(2025,9,13);
-const END_DATE = new Date(2026,5,12);
-const DUTY_START = new Date(2026,0,6);
-const DAY = 86400000;
+/* ---------- KUUPÄEVAD ---------- */
+const START_DATE=new Date(2025,9,13);
+const END_DATE=new Date(2026,5,12);
+const DUTY_START=new Date(2026,0,6);
 
-const LEFT = ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL","MARK","KRISTI","ARU"];
-const RIGHT = ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
-const ALL = [...LEFT,...RIGHT];
+/* ---------- NIMED ---------- */
+const RIGHT=["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
+const LEFT=["ARU","SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"];
 
-function tallinnNow(){try{return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));}catch(e){return new Date();}}
+const ALL=[...RIGHT,...LEFT];
+const PRIORITY=["TAMME","PINT","KOSEMAA","KUUSEORG"];
+
+const DAY=86400000;
+
+/* ---------- TALLINN AEG ---------- */
+function nowTallinn(){
+ return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
+}
 function day(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function diff(a,b){return Math.floor((b-a)/DAY);}
 
+/* ---------- PÄEVAD ---------- */
 function calcDays(){
- const today = day(tallinnNow());
- const total = diff(day(START_DATE), day(END_DATE))+1;
- const done = Math.max(0,diff(day(START_DATE), today));
- const left = Math.max(0,diff(today, day(END_DATE))+1);
- return {today,total,done,left};
+ const today=day(nowTallinn());
+ const start=day(START_DATE);
+ const end=day(END_DATE);
+
+ const total=diff(start,end)+1;
+ const done=Math.max(0,diff(start,today));
+ const left=Math.max(0,diff(today,end)+1);
+
+ return {total,done,left,today};
 }
 
-function duty(list,today){
- const i = diff(day(DUTY_START), today);
+/* ---------- KORRAPIDAJA ---------- */
+function roomDuty(today,list){
+ const i=diff(day(DUTY_START),today);
  return list[(i%list.length+list.length)%list.length];
 }
 
-function areaCleaners(today){
- const seed = diff(day(START_DATE), today)+1;
- let res = [];
- while(res.length<8){
-   const n = ALL[Math.floor(Math.sin(seed+res.length)*10000%ALL.length)];
-   if(!res.includes(n)) res.push(n);
- }
- return res;
+/* ---------- SEED RANDOM ---------- */
+function rand(seed){
+ let x=Math.sin(seed)*10000;
+ return x-Math.floor(x);
 }
 
-function updateAll(){
- const now = tallinnNow();
- clock.innerText = now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
+/* ---------- ALA KORISTAJAD ---------- */
+function areaCleanersFor(date){
+ const start=day(START_DATE);
+ let prev=[];
+ let result=[];
 
- const {today,total,done,left} = calcDays();
- totalDays.value = total+" päeva";
- doneDays.value = done+" päeva";
- leftDays.value = left+" päeva";
+ for(let d=new Date(start);d<=date;d.setDate(d.getDate()+1)){
 
- const pct = Math.min(100,(done/total*100).toFixed(1));
- progressBar.style.width = pct+"%";
- progressBar.innerText = pct+"%";
+  const seed=diff(start,d)+1000;
+  let pool=[];
 
- const g50 = Math.round(total*0.5); const g75 = Math.round(total*0.75);
- goal.value = done<g50?`50%: ${g50-done} päeva`:
-              done<g75?`75%: ${g75-done} päeva`:
-              done<total?`100%: ${total-done} päeva`:"VALMIS";
+  ALL.forEach(n=>{
+   let w=1;
+   if(PRIORITY.includes(n)) w=2;
+   if(prev.includes(n)) w=0;
+   for(let i=0;i<w;i++) pool.push(n);
+  });
 
- todayDate.innerText = today.toLocaleDateString("et-EE");
- leftToday.innerText = duty(LEFT, today);
- rightToday.innerText = duty(RIGHT, today);
- areaCleaners.innerText = areaCleaners(today).join(", ");
-}
+  if(pool.length<8) pool=[...ALL];
 
-// TABELID 30 PÄEVA KORRAGA
-function fillTables(){
- const leftContainer = document.getElementById("excelLeft");
- const rightContainer = document.getElementById("excelRight");
- let d = new Date(DUTY_START);
+  let set=new Set(); let i=0;
+  while(set.size<8){
+   set.add(pool[Math.floor(rand(seed+i)*pool.length)]);
+   i++;
+  }
 
- while(d <= END_DATE){
-   const leftTable = document.createElement("table");
-   leftTable.className="table table-bordered table-striped mb-2";
-   const rightTable = document.createElement("table");
-   rightTable.className="table table-bordered table-striped mb-2";
-
-   leftTable.innerHTML="<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody></tbody>";
-   rightTable.innerHTML="<thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody></tbody>";
-
-   const leftBody = leftTable.querySelector("tbody");
-   const rightBody = rightTable.querySelector("tbody");
-
-   for(let i=0;i<30 && d<=END_DATE;i++){
-     const idx = diff(DUTY_START,d);
-     leftBody.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${LEFT[idx%LEFT.length]}</td></tr>`;
-     rightBody.innerHTML += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${RIGHT[idx%RIGHT.length]}</td></tr>`;
-     d.setDate(d.getDate()+1);
+  let pr=[...set].filter(n=>PRIORITY.includes(n));
+  if(pr.length>2){
+   set=new Set([...set].filter(n=>!PRIORITY.includes(n)));
+   while(set.size<8){
+    const n=ALL[Math.floor(rand(seed+200+i)*ALL.length)];
+    if(!PRIORITY.includes(n)) set.add(n);
+    i++;
    }
-   leftContainer.appendChild(leftTable);
-   rightContainer.appendChild(rightTable);
+  }
+
+  result=[...set];
+  prev=result;
  }
+
+ return result;
 }
 
-fillTables();
-updateAll();
-setInterval(updateAll,60000);
+/* ---------- UPDATE ---------- */
+function update(){
+ const now=nowTallinn();
+ clock.innerText=now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
+
+ const {total,done,left,today}=calcDays();
+
+ totalDays.value="Kogu periood: "+total+" päeva";
+ doneDays.value="Tehtud: "+done+" päeva";
+ leftDays.value="Jäänud: "+left+" päeva";
+
+ const pct=Math.min(100,(done/total*100).toFixed(1));
+ progressBar.style.width=pct+"%";
+ progressBar.innerText=pct+"%";
+
+ const g50=Math.round(total*0.5);
+ const g75=Math.round(total*0.75);
+ goal.value=
+ done<g50?`50%: ${g50-done} päeva`:
+ done<g75?`75%: ${g75-done} päeva`:
+ done<total?`100%: ${total-done} päeva`:"VALMIS";
+
+ todayDate.innerText=today.toLocaleDateString("et-EE");
+ todayRight.innerText=roomDuty(today,RIGHT);
+ todayLeft.innerText=roomDuty(today,LEFT);
+
+ areaCleaners.innerText=areaCleanersFor(today).join(", ");
+}
+
+update();
+setInterval(update,1000);
 </script>
 </body>
 </html>
