@@ -9,27 +9,17 @@
 
 <style>
 body{
-  background-size:cover;
-  background-position:center;
-  background-attachment:fixed;
-}
-.overlay{
-  background:rgba(255,255,255,0.82);
-  min-height:100vh;
+  background:#f8f9fa;
 }
 .progress-bar{
   color:#fff;
   font-weight:bold;
-  text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;
-}
-table th, table td{
-  text-align:center;
 }
 </style>
 </head>
 
 <body>
-<div class="overlay">
+
 <div class="container py-4">
 
 <!-- PEALKIRI -->
@@ -87,8 +77,15 @@ table th, table td{
 <div class="card-body">
 <h5>🧹 Tänased korrapidajad</h5>
 <p id="todayDate" class="fw-bold"></p>
+
 <p><strong>Parem tuba:</strong> <span id="todayRight"></span></p>
 <p><strong>Vasak tuba:</strong> <span id="todayLeft"></span></p>
+
+<hr>
+
+<h6>🪖 Ala koristajad (8 suvalist)</h6>
+<ul id="randomList" class="list-group mt-2"></ul>
+
 </div>
 </div>
 </div>
@@ -97,37 +94,43 @@ table th, table td{
 <div class="tab-pane fade" id="listTab">
 <div class="card shadow">
 <div class="card-body">
-<div class="accordion" id="roomsAccordion"></div>
+<div class="row">
+
+<div class="col-md-6">
+<h6>Parema toa nimekiri</h6>
+<ul id="rightList" class="list-group"></ul>
+</div>
+
+<div class="col-md-6">
+<h6>Vasaku toa nimekiri</h6>
+<ul id="leftList" class="list-group"></ul>
+</div>
+
+</div>
 </div>
 </div>
 </div>
 
-</div>
 </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-/* ================== KONFIG ================== */
+
+/* KUUPÄEVAD */
 const START_DATE = new Date(2025,9,13);
 const END_DATE   = new Date(2026,5,12);
 
+/* Korrapidaja algus */
 const DUTY_START = new Date(2026,0,6);
-const DUTY_END   = new Date(2026,5,12);
 
+/* Nimede listid */
 const ROOMS = {
-  parem: {
-    label: "Parema toa korrapidaja",
-    names: ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"]
-  },
-  vasak: {
-    label: "Vasaku toa korrapidaja",
-    names: ["ARU","SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"]
-  }
+  parem: ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"],
+  vasak: ["ARU","SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"]
 };
 
-/* ================== ABID ================== */
 const DAY_MS = 1000*60*60*24;
 
 function nowTallinn(){
@@ -140,8 +143,9 @@ function daysBetween(a,b){
   return Math.floor((b - a) / DAY_MS);
 }
 
-/* ================== UPDATE ================== */
+/* UPDATE */
 function update(){
+
   const now = nowTallinn();
   clock.innerText = now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
@@ -155,7 +159,7 @@ function update(){
 
   totalDays.value = total+" päeva";
   doneDays.value  = done+" päeva";
-  leftDays.value  = left+" päeva";
+  leftDays.value  = left+" päeva";   // 👉 praegu peab näitama 110
 
   const pct = Math.min(100,(done/total*100).toFixed(1));
   progressBar.style.width = pct+"%";
@@ -163,56 +167,72 @@ function update(){
 
   const g50 = Math.round(total*0.5);
   const g75 = Math.round(total*0.75);
+
   goal.value =
     done < g50 ? `50%: ${g50-done} päeva` :
     done < g75 ? `75%: ${g75-done} päeva` :
     done < total ? `100%: ${total-done} päeva` :
     "VALMIS";
 
+  /* Tänane korrapidaja */
   const dutyIndex = daysBetween(dayOnly(DUTY_START), today);
+
   todayDate.innerText = today.toLocaleDateString("et-EE");
-  todayRight.innerText = ROOMS.parem.names[dutyIndex % ROOMS.parem.names.length];
-  todayLeft.innerText  = ROOMS.vasak.names[dutyIndex % ROOMS.vasak.names.length];
+  todayRight.innerText = ROOMS.parem[Math.abs(dutyIndex) % ROOMS.parem.length];
+  todayLeft.innerText  = ROOMS.vasak[Math.abs(dutyIndex) % ROOMS.vasak.length];
+
+  generateDailyRandomList(today);
 }
 
-/* ================== LISTID ================== */
-function buildLists(){
-  let html="", acc=0;
+/* 8 SUVALIST */
+function generateDailyRandomList(today){
 
-  for(const key in ROOMS){
-    const room = ROOMS[key];
-    html += `
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button ${acc?"collapsed":""}"
-          data-bs-toggle="collapse" data-bs-target="#room${acc}">
-          ${room.label}
-        </button>
-      </h2>
-      <div id="room${acc}" class="accordion-collapse collapse ${acc?"":"show"}"
-        data-bs-parent="#roomsAccordion">
-        <div class="accordion-body">
-        <table class="table table-bordered table-striped">
-        <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody>`;
+  const seed = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
 
-    let i=0;
-    for(let d=new Date(DUTY_START); d<=DUTY_END; d.setDate(d.getDate()+1)){
-      html += `<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i % room.names.length]}</td></tr>`;
-      i++;
-    }
-
-    html += `</tbody></table></div></div></div>`;
-    acc++;
+  function seededRandom(seed){
+    let x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
   }
 
-  roomsAccordion.innerHTML = html;
+  function pickRandom(arr, count, offset){
+    let copy = [...arr];
+    let result = [];
+
+    for(let i=0;i<count;i++){
+      const index = Math.floor(seededRandom(seed+offset+i) * copy.length);
+      result.push(copy[index]);
+      copy.splice(index,1);
+    }
+    return result;
+  }
+
+  const right4 = pickRandom(ROOMS.parem,4,10);
+  const left4  = pickRandom(ROOMS.vasak,4,50);
+
+  const combined = [...right4,...left4];
+
+  randomList.innerHTML = "";
+  combined.forEach(n=>{
+    randomList.innerHTML += `<li class="list-group-item">${n}</li>`;
+  });
 }
 
-/* ================== START ================== */
+/* Ehita nimekirjad */
+function buildLists(){
+  rightList.innerHTML="";
+  leftList.innerHTML="";
+  ROOMS.parem.forEach(n=>{
+    rightList.innerHTML+=`<li class="list-group-item">${n}</li>`;
+  });
+  ROOMS.vasak.forEach(n=>{
+    leftList.innerHTML+=`<li class="list-group-item">${n}</li>`;
+  });
+}
+
 buildLists();
 update();
 setInterval(update,1000);
-</script>
 
+</script>
 </body>
 </html>
