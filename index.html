@@ -8,21 +8,14 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-body{
-  background:#f8f9fa;
-}
-.progress-bar{
-  color:#fff;
-  font-weight:bold;
-}
+body{ background:#f8f9fa; }
+.progress-bar{ color:#fff; font-weight:bold; }
 </style>
 </head>
-
 <body>
 
 <div class="container py-4">
 
-<!-- PEALKIRI -->
 <div class="card shadow text-center mb-3">
 <div class="card-body">
 <h4>🇪🇪 Oktoobri Kutse → <strong>Päevi reservini</strong></h4>
@@ -30,7 +23,6 @@ body{
 </div>
 </div>
 
-<!-- TABID -->
 <ul class="nav nav-tabs mb-3">
 <li class="nav-item">
 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button>
@@ -39,7 +31,7 @@ body{
 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button>
 </li>
 <li class="nav-item">
-<button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">📋 Toa korrapidaja list</button>
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#calendarTab">📅 Korrapidaja kalender</button>
 </li>
 </ul>
 
@@ -47,7 +39,7 @@ body{
 
 <!-- EDENEMINE -->
 <div class="tab-pane fade show active" id="progressTab">
-<div class="card shadow mb-4">
+<div class="card shadow">
 <div class="card-body">
 
 <label>Kogu periood</label>
@@ -59,7 +51,6 @@ body{
 <label>Jäänud</label>
 <input id="leftDays" class="form-control mb-2" readonly>
 
-<label>Progress</label>
 <div class="progress mb-3" style="height:30px">
 <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
 </div>
@@ -75,6 +66,7 @@ body{
 <div class="tab-pane fade" id="todayTab">
 <div class="card shadow text-center">
 <div class="card-body">
+
 <h5>🧹 Tänased korrapidajad</h5>
 <p id="todayDate" class="fw-bold"></p>
 
@@ -83,29 +75,28 @@ body{
 
 <hr>
 
-<h6>🪖 Ala koristajad (8 suvalist)</h6>
+<h6>🪖 Ala koristajad (8)</h6>
 <ul id="randomList" class="list-group mt-2"></ul>
 
 </div>
 </div>
 </div>
 
-<!-- LIST -->
-<div class="tab-pane fade" id="listTab">
+<!-- KALENDER -->
+<div class="tab-pane fade" id="calendarTab">
 <div class="card shadow">
 <div class="card-body">
-<div class="row">
-
-<div class="col-md-6">
-<h6>Parema toa nimekiri</h6>
-<ul id="rightList" class="list-group"></ul>
-</div>
-
-<div class="col-md-6">
-<h6>Vasaku toa nimekiri</h6>
-<ul id="leftList" class="list-group"></ul>
-</div>
-
+<div style="max-height:400px; overflow-y:auto;">
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Kuupäev</th>
+<th>Parem</th>
+<th>Vasak</th>
+</tr>
+</thead>
+<tbody id="calendarBody"></tbody>
+</table>
 </div>
 </div>
 </div>
@@ -121,14 +112,13 @@ body{
 /* KUUPÄEVAD */
 const START_DATE = new Date(2025,9,13);
 const END_DATE   = new Date(2026,5,12);
-
-/* Korrapidaja algus */
 const DUTY_START = new Date(2026,0,6);
+const DUTY_END   = new Date(2026,5,12);
 
-/* Nimede listid */
+/* VAHETATUD TOAD */
 const ROOMS = {
-  parem: ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"],
-  vasak: ["ARU","SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"]
+  parem: ["ARU","SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"],
+  vasak: ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"]
 };
 
 const DAY_MS = 1000*60*60*24;
@@ -147,9 +137,10 @@ function daysBetween(a,b){
 function update(){
 
   const now = nowTallinn();
+  const today = dayOnly(now);
+
   clock.innerText = now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
-  const today = dayOnly(now);
   const start = dayOnly(START_DATE);
   const end   = dayOnly(END_DATE);
 
@@ -159,7 +150,7 @@ function update(){
 
   totalDays.value = total+" päeva";
   doneDays.value  = done+" päeva";
-  leftDays.value  = left+" päeva";   // 👉 praegu peab näitama 110
+  leftDays.value  = left+" päeva";
 
   const pct = Math.min(100,(done/total*100).toFixed(1));
   progressBar.style.width = pct+"%";
@@ -174,62 +165,90 @@ function update(){
     done < total ? `100%: ${total-done} päeva` :
     "VALMIS";
 
-  /* Tänane korrapidaja */
   const dutyIndex = daysBetween(dayOnly(DUTY_START), today);
 
   todayDate.innerText = today.toLocaleDateString("et-EE");
   todayRight.innerText = ROOMS.parem[Math.abs(dutyIndex) % ROOMS.parem.length];
   todayLeft.innerText  = ROOMS.vasak[Math.abs(dutyIndex) % ROOMS.vasak.length];
 
-  generateDailyRandomList(today);
+  generateDailyArea(today);
 }
 
-/* 8 SUVALIST */
-function generateDailyRandomList(today){
+/* ALA KORISTAJAD – EI SAA 2 PÄEVA JÄRJEST */
+function generateDailyArea(today){
 
-  const seed = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
+  const seed = daysBetween(new Date(2025,0,1), today);
 
-  function seededRandom(seed){
-    let x = Math.sin(seed) * 10000;
-    return x - Math.floor(x);
+  function mulberry32(a){
+    return function(){
+      var t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
   }
 
-  function pickRandom(arr, count, offset){
-    let copy = [...arr];
-    let result = [];
+  const rngToday = mulberry32(seed);
+  const rngYesterday = mulberry32(seed-1);
 
-    for(let i=0;i<count;i++){
-      const index = Math.floor(seededRandom(seed+offset+i) * copy.length);
-      result.push(copy[index]);
+  function pick(names,rng){
+    let copy=[...names];
+    let arr=[];
+    for(let i=0;i<4;i++){
+      const index=Math.floor(rng()*copy.length);
+      arr.push(copy[index]);
       copy.splice(index,1);
     }
-    return result;
+    return arr;
   }
 
-  const right4 = pickRandom(ROOMS.parem,4,10);
-  const left4  = pickRandom(ROOMS.vasak,4,50);
+  const todayRight = pick(ROOMS.parem,rngToday);
+  const todayLeft  = pick(ROOMS.vasak,rngToday);
 
-  const combined = [...right4,...left4];
+  const yRight = pick(ROOMS.parem,rngYesterday);
+  const yLeft  = pick(ROOMS.vasak,rngYesterday);
 
-  randomList.innerHTML = "";
-  combined.forEach(n=>{
-    randomList.innerHTML += `<li class="list-group-item">${n}</li>`;
+  let finalRight = todayRight.filter(n=>!yRight.includes(n));
+  let finalLeft  = todayLeft.filter(n=>!yLeft.includes(n));
+
+  while(finalRight.length<4){
+    const n = ROOMS.parem[Math.floor(rngToday()*ROOMS.parem.length)];
+    if(!finalRight.includes(n) && !yRight.includes(n)) finalRight.push(n);
+  }
+  while(finalLeft.length<4){
+    const n = ROOMS.vasak[Math.floor(rngToday()*ROOMS.vasak.length)];
+    if(!finalLeft.includes(n) && !yLeft.includes(n)) finalLeft.push(n);
+  }
+
+  randomList.innerHTML="";
+  [...finalRight,...finalLeft].forEach(n=>{
+    randomList.innerHTML+=`<li class="list-group-item">${n}</li>`;
   });
 }
 
-/* Ehita nimekirjad */
-function buildLists(){
-  rightList.innerHTML="";
-  leftList.innerHTML="";
-  ROOMS.parem.forEach(n=>{
-    rightList.innerHTML+=`<li class="list-group-item">${n}</li>`;
-  });
-  ROOMS.vasak.forEach(n=>{
-    leftList.innerHTML+=`<li class="list-group-item">${n}</li>`;
-  });
+/* KALENDER KUNI 12 JUUNI */
+function buildCalendar(){
+
+  let html="";
+  let i=0;
+
+  for(let d=new Date(DUTY_START); d<=DUTY_END; d.setDate(d.getDate()+1)){
+
+    html+=`
+    <tr>
+      <td>${d.toLocaleDateString("et-EE")}</td>
+      <td>${ROOMS.parem[i % ROOMS.parem.length]}</td>
+      <td>${ROOMS.vasak[i % ROOMS.vasak.length]}</td>
+    </tr>
+    `;
+
+    i++;
+  }
+
+  calendarBody.innerHTML=html;
 }
 
-buildLists();
+buildCalendar();
 update();
 setInterval(update,1000);
 
