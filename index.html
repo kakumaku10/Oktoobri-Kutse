@@ -87,6 +87,7 @@ class="progress-bar progress-bar-striped progress-bar-animated">
 
 </div>
 
+
 <div class="tab-pane fade" id="todayTab">
 
 <div class="card shadow text-center">
@@ -116,6 +117,7 @@ class="progress-bar progress-bar-striped progress-bar-animated">
 </div>
 
 </div>
+
 
 <div class="tab-pane fade" id="calendarTab">
 
@@ -190,6 +192,7 @@ function daysBetween(a,b){
 return Math.floor((b-a)/DAY)
 }
 
+
 function update(){
 
 const now=nowTallinn()
@@ -207,9 +210,7 @@ const done=Math.max(0,daysBetween(dayOnly(START_DATE),today))
 const left=Math.max(0,daysBetween(today,dayOnly(END_DATE))+1)
 
 totalDays.value=total+" päeva"
-
 doneDays.value=done+" päeva"
-
 leftDays.value=left+" päeva"
 
 const pct=Math.min(100,(done/total*100).toFixed(1))
@@ -240,53 +241,57 @@ generateArea(today)
 
 }
 
-function generateArea(today){
 
-const seed=daysBetween(new Date(2025,0,1),today)
+function shuffle(array,seed){
+
+let arr=[...array]
 
 function rand(n){
 let x=Math.sin(n)*10000
 return x-Math.floor(x)
 }
 
-function shuffle(arr,seed){
-
-let a=[...arr]
-
-for(let i=a.length-1;i>0;i--){
+for(let i=arr.length-1;i>0;i--){
 const j=Math.floor(rand(seed+i)*(i+1))
-[a[i],a[j]]=[a[j],a[i]]
+[arr[i],arr[j]]=[arr[j],arr[i]]
 }
 
-return a
+return arr
 
 }
 
-const todayRight=shuffle(ROOMS.parem,seed).slice(0,4)
-const todayLeft=shuffle(ROOMS.vasak,seed).slice(0,4)
 
-const yRight=shuffle(ROOMS.parem,seed-1).slice(0,4)
-const yLeft=shuffle(ROOMS.vasak,seed-1).slice(0,4)
+function generateArea(today){
 
-const y2Right=shuffle(ROOMS.parem,seed-2).slice(0,4)
-const y2Left=shuffle(ROOMS.vasak,seed-2).slice(0,4)
+const seed=daysBetween(new Date(2025,0,1),today)
 
-const finalR=todayRight.filter(
-n=>!yRight.includes(n)&&!y2Right.includes(n)
-)
+const yesterdaySeed=seed-1
 
-const finalL=todayLeft.filter(
-n=>!yLeft.includes(n)&&!y2Left.includes(n)
-)
+const yesterday=[
+...shuffle(ROOMS.parem,yesterdaySeed).slice(0,4),
+...shuffle(ROOMS.vasak,yesterdaySeed).slice(0,4)
+]
+
+let right=shuffle(ROOMS.parem,seed).filter(n=>!yesterday.includes(n)).slice(0,4)
+let left=shuffle(ROOMS.vasak,seed).filter(n=>!yesterday.includes(n)).slice(0,4)
+
+while(right.length<4){
+right.push(ROOMS.parem[Math.floor(Math.random()*ROOMS.parem.length)])
+}
+
+while(left.length<4){
+left.push(ROOMS.vasak[Math.floor(Math.random()*ROOMS.vasak.length)])
+}
 
 randomList.innerHTML=""
 
-;[...finalR,...finalL].forEach(n=>{
+;[...right,...left].forEach(n=>{
 randomList.innerHTML+=
 `<li class="list-group-item">${n}</li>`
 })
 
 }
+
 
 function buildCalendar(){
 
@@ -309,6 +314,7 @@ i++
 calendarBody.innerHTML=html
 
 }
+
 
 buildCalendar()
 update()
