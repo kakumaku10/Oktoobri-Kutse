@@ -9,11 +9,16 @@
 
 <style>
 body{
-background:#f5f5f5;
+background:#f8f9fa;
 }
+
 .progress-bar{
 color:white;
 font-weight:bold;
+}
+
+table th, table td{
+text-align:center;
 }
 </style>
 </head>
@@ -30,61 +35,104 @@ font-weight:bold;
 </div>
 
 <ul class="nav nav-tabs mb-3">
-
 <li class="nav-item">
-<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">
-📈 Edenemine
-</button>
+<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button>
 </li>
 
 <li class="nav-item">
-<button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">
-🧹 Täna
-</button>
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button>
 </li>
 
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#calendarTab">📅 Korrapidaja kalender</button>
+</li>
 </ul>
 
 <div class="tab-content">
 
 <!-- EDENEMINE -->
+
 <div class="tab-pane fade show active" id="progressTab">
+
 <div class="card shadow">
 <div class="card-body">
 
+<label>Kogu periood</label>
+<input id="totalDays" class="form-control mb-2" readonly>
+
+<label>Tehtud</label>
+<input id="doneDays" class="form-control mb-2" readonly>
+
 <label>Jäänud</label>
-<input id="leftDays" class="form-control mb-3" readonly>
+<input id="leftDays" class="form-control mb-2" readonly>
 
-<div class="progress" style="height:30px">
-<div id="progressBar"
-class="progress-bar progress-bar-striped progress-bar-animated">
-0%
-</div>
+<div class="progress mb-3" style="height:30px">
+<div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
 </div>
 
+<label>Järgmine eesmärk</label>
+<input id="goal" class="form-control" readonly>
+
 </div>
 </div>
 </div>
+
 
 <!-- TÄNA -->
+
 <div class="tab-pane fade" id="todayTab">
+
 <div class="card shadow text-center">
 <div class="card-body">
 
-<h5>🧹 Täna</h5>
+<h5>🧹 Tänased korrapidajad</h5>
 
 <p id="todayDate" class="fw-bold"></p>
 
-<p><strong>Parem:</strong> <span id="todayRight"></span></p>
-<p><strong>Vasak:</strong> <span id="todayLeft"></span></p>
+<p><strong>Parem tuba:</strong> <span id="todayRight"></span></p>
+
+<p><strong>Vasak tuba:</strong> <span id="todayLeft"></span></p>
 
 <hr>
 
-<h6>🪖 Ala koristajad</h6>
+<h6>🪖 Ala koristajad (8)</h6>
+
 <ul id="randomList" class="list-group"></ul>
 
 </div>
 </div>
+
+</div>
+
+
+<!-- KALENDER -->
+
+<div class="tab-pane fade" id="calendarTab">
+
+<div class="card shadow">
+<div class="card-body">
+
+<div style="max-height:400px;overflow-y:auto">
+
+<table class="table table-bordered table-striped">
+
+<thead>
+<tr>
+<th>Kuupäev</th>
+<th>Parem</th>
+<th>Vasak</th>
+</tr>
+</thead>
+
+<tbody id="calendarBody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+</div>
+
 </div>
 
 </div>
@@ -94,82 +142,177 @@ class="progress-bar progress-bar-striped progress-bar-animated">
 
 <script>
 
-const START = new Date(2025,9,13)
-const END   = new Date(2026,5,12)
+/* KUUPÄEVAD */
 
-const PAREM = ["ARU","SUDER","PISNENKO","TAMMUS","KASPAR","VIISPERT","NURMETALO","KAAREL","MARK","KRISTI"]
-const VASAK = ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"]
+const START_DATE = new Date(2025,9,13)
+const END_DATE   = new Date(2026,5,12)
+
+const DUTY_START = new Date(2026,0,6)
+const DUTY_END   = new Date(2026,5,12)
+
+/* TOAD (VAHETATUD) */
+
+const ROOMS = {
+
+parem:[
+"ARU","SUDER","PISNENKO","TAMMUS","KASPAR PLANS",
+"VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"
+],
+
+vasak:[
+"KOSEMAA","KUUSEORG","LUMISTE","MÜÜR",
+"PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"
+]
+
+}
 
 const DAY = 1000*60*60*24
 
-function now(){
+function nowTallinn(){
 return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}))
 }
 
-function days(a,b){
+function dayOnly(d){
+return new Date(d.getFullYear(),d.getMonth(),d.getDate())
+}
+
+function daysBetween(a,b){
 return Math.floor((b-a)/DAY)
+}
+
+
+/* EDENEMINE */
+
+function update(){
+
+const now = nowTallinn()
+
+clock.innerText =
+now.toLocaleDateString("et-EE")+" "+
+now.toLocaleTimeString("et-EE")
+
+const today = dayOnly(now)
+
+const total = daysBetween(dayOnly(START_DATE),dayOnly(END_DATE))+1
+
+const done  = Math.max(0,daysBetween(dayOnly(START_DATE),today))
+
+const left  = Math.max(0,daysBetween(today,dayOnly(END_DATE))+1)
+
+totalDays.value = total+" päeva"
+
+doneDays.value  = done+" päeva"
+
+leftDays.value  = left+" päeva"   // peab näitama 88
+
+const pct = Math.min(100,(done/total*100).toFixed(1))
+
+progressBar.style.width=pct+"%"
+progressBar.innerText=pct+"%"
+
+const g50=Math.round(total*0.5)
+const g75=Math.round(total*0.75)
+
+goal.value=
+done<g50?`50%: ${g50-done} päeva`:
+done<g75?`75%: ${g75-done} päeva`:
+done<total?`100%: ${total-done} päeva`:
+"VALMIS"
+
+const dutyIndex = daysBetween(dayOnly(DUTY_START),today)
+
+todayDate.innerText=today.toLocaleDateString("et-EE")
+
+todayRight.innerText =
+ROOMS.parem[Math.abs(dutyIndex)%ROOMS.parem.length]
+
+todayLeft.innerText =
+ROOMS.vasak[Math.abs(dutyIndex)%ROOMS.vasak.length]
+
+generateArea(today)
+
+}
+
+
+/* ALA KORISTAJAD */
+
+function generateArea(today){
+
+const seed = daysBetween(new Date(2025,0,1),today)
+
+function rand(n){
+let x=Math.sin(n)*10000
+return x-Math.floor(x)
 }
 
 function shuffle(arr,seed){
 
 let a=[...arr]
 
-function r(n){
-let x=Math.sin(n)*10000
-return x-Math.floor(x)
-}
-
 for(let i=a.length-1;i>0;i--){
-const j=Math.floor(r(seed+i)*(i+1))
+
+const j=Math.floor(rand(seed+i)*(i+1))
+
 [a[i],a[j]]=[a[j],a[i]]
+
 }
 
 return a
+
 }
 
-function update(){
+const todayR = shuffle(ROOMS.parem,seed)
+const todayL = shuffle(ROOMS.vasak,seed)
 
-const n=now()
+const yR = shuffle(ROOMS.parem,seed-1).slice(0,4)
+const yL = shuffle(ROOMS.vasak,seed-1).slice(0,4)
 
-clock.innerText =
-n.toLocaleDateString("et-EE")+" "+
-n.toLocaleTimeString("et-EE")
-
-const total = days(START,END)+1
-const done  = days(START,n)
-const left  = days(n,END)+1
-
-leftDays.value = left+" päeva"
-
-const pct = Math.min(100,(done/total*100).toFixed(1))
-progressBar.style.width=pct+"%"
-progressBar.innerText=pct+"%"
-
-todayDate.innerText = n.toLocaleDateString("et-EE")
-
-const index = days(new Date(2026,0,6),n)
-
-todayRight.innerText = PAREM[Math.abs(index)%PAREM.length]
-todayLeft.innerText  = VASAK[Math.abs(index)%VASAK.length]
-
-/* ALA KORISTAJAD (lihtne ja kindel) */
-const seed = days(new Date(2025,0,1),n)
-
-const right = shuffle(PAREM,seed).slice(0,4)
-const lefts = shuffle(VASAK,seed).slice(0,4)
+const finalR = todayR.filter(n=>!yR.includes(n)).slice(0,4)
+const finalL = todayL.filter(n=>!yL.includes(n)).slice(0,4)
 
 randomList.innerHTML=""
 
-;[...right,...lefts].forEach(n=>{
+;[...finalR,...finalL].forEach(n=>{
+
 randomList.innerHTML+=`<li class="list-group-item">${n}</li>`
+
 })
 
 }
 
-document.addEventListener("DOMContentLoaded",function(){
+
+/* KALENDER */
+
+function buildCalendar(){
+
+let html=""
+
+let i=0
+
+for(let d=new Date(DUTY_START);d<=DUTY_END;d.setDate(d.getDate()+1)){
+
+html+=`
+<tr>
+<td>${d.toLocaleDateString("et-EE")}</td>
+<td>${ROOMS.parem[i%ROOMS.parem.length]}</td>
+<td>${ROOMS.vasak[i%ROOMS.vasak.length]}</td>
+</tr>
+`
+
+i++
+
+}
+
+calendarBody.innerHTML=html
+
+}
+
+
+buildCalendar()
+
 update()
+
 setInterval(update,1000)
-})
 
 </script>
 
