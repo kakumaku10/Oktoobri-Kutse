@@ -25,19 +25,12 @@ body{background:#f5f5f5;}
 </div>
 
 <ul class="nav nav-tabs mb-3">
-
 <li class="nav-item">
-<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">
-📈 Edenemine
-</button>
+<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button>
 </li>
-
 <li class="nav-item">
-<button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">
-🧹 Täna
-</button>
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button>
 </li>
-
 </ul>
 
 <div class="tab-content">
@@ -47,18 +40,11 @@ body{background:#f5f5f5;}
 <div class="card shadow">
 <div class="card-body">
 
-<label>Kogu periood</label>
-<input id="totalDays" class="form-control mb-2" readonly>
-
-<label>Tehtud</label>
-<input id="doneDays" class="form-control mb-2" readonly>
-
 <label>Jäänud</label>
-<input id="leftDays" class="form-control mb-2" readonly>
+<input id="leftDays" class="form-control mb-3" readonly>
 
-<div class="progress mb-3" style="height:30px">
-<div id="progressBar"
-class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
+<div class="progress" style="height:30px">
+<div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
 </div>
 
 </div>
@@ -93,11 +79,9 @@ class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
 
 <script>
 
-/* KUUPÄEVAD */
 const START = new Date(2025,9,13)
 const END   = new Date(2026,5,12)
 
-/* TOAD */
 const PAREM = ["ARU","SUDER","PISNENKO","TAMMUS","KASPAR","VIISPERT","NURMETALO","KAAREL","MARK","KRISTI"]
 const VASAK = ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"]
 
@@ -107,14 +91,8 @@ function now(){
 return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}))
 }
 
-/* OLULINE FIX */
-function daysBetween(a,b){
-return Math.floor((b - a) / DAY)
-}
-
-function getToday(){
-const n = now()
-return new Date(n.getFullYear(), n.getMonth(), n.getDate())
+function days(a,b){
+return Math.floor((b-a)/DAY)
 }
 
 /* SHUFFLE */
@@ -128,57 +106,61 @@ const j=Math.floor(r(seed+i)*(i+1))
 return a
 }
 
+/* ALA KORISTAJAD ERALDI */
+function generateArea(){
+
+const today = new Date()
+const seed = days(new Date(2025,0,1),today)
+
+const right = shuffle(PAREM,seed).slice(0,4)
+const left  = shuffle(VASAK,seed).slice(0,4)
+
+const list = document.getElementById("randomList")
+
+list.innerHTML = ""
+
+;[...right,...left].forEach(n=>{
+list.innerHTML += `<li class="list-group-item">${n}</li>`
+})
+
+}
+
 /* UPDATE */
 function update(){
 
 const n=now()
-const today=getToday()
 
 clock.innerText =
 n.toLocaleDateString("et-EE")+" "+
 n.toLocaleTimeString("et-EE")
 
-const startDay = new Date(START.getFullYear(),START.getMonth(),START.getDate())
-const endDay   = new Date(END.getFullYear(),END.getMonth(),END.getDate())
+const total = days(START,END)
+const done  = days(START,n)
+const left  = days(n,END)
 
-const total = daysBetween(startDay,endDay)
-const done  = daysBetween(startDay,today)
-const left  = daysBetween(today,endDay)
-
-totalDays.value = total+" päeva"
-doneDays.value  = done+" päeva"
-leftDays.value  = left+" päeva"   // 👉 nüüd 67
+leftDays.value = left+" päeva"
 
 const pct = Math.min(100,(done/total*100).toFixed(1))
 progressBar.style.width=pct+"%"
 progressBar.innerText=pct+"%"
 
-/* TÄNA */
-todayDate.innerText = today.toLocaleDateString("et-EE")
+todayDate.innerText = n.toLocaleDateString("et-EE")
 
-const index = daysBetween(new Date(2026,0,6),today)
+const index = days(new Date(2026,0,6),n)
 
 todayRight.innerText = PAREM[Math.abs(index)%PAREM.length]
 todayLeft.innerText  = VASAK[Math.abs(index)%VASAK.length]
-
-/* ALA KORISTAJAD (lihtne ja kindel) */
-const seed = daysBetween(new Date(2025,0,1),today)
-
-const right = shuffle(PAREM,seed).slice(0,4)
-const lefts = shuffle(VASAK,seed).slice(0,4)
-
-randomList.innerHTML=""
-
-;[...right,...lefts].forEach(n=>{
-randomList.innerHTML+=`<li class="list-group-item">${n}</li>`
-})
 
 }
 
 /* START */
 document.addEventListener("DOMContentLoaded",function(){
+
 update()
+generateArea()   // 🔥 ERALDI KUTSE
+
 setInterval(update,1000)
+
 })
 
 </script>
