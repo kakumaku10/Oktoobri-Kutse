@@ -8,47 +8,35 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-body{
-  background:#f5f5f5;
-}
-.overlay{
-  min-height:100vh;
-}
+body{background:#f5f5f5;}
 .progress-bar{
   color:#fff;
   font-weight:bold;
   text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;
 }
-table th, table td{
-  text-align:center;
-}
 </style>
 </head>
 
 <body>
-<div class="overlay">
 <div class="container py-4">
 
-<!-- PEALKIRI -->
 <div class="card shadow text-center mb-3">
 <div class="card-body">
-<h4>🇪🇪 Oktoobri Kutse → <strong>Päevi reservini</strong></h4>
+<h4>🇪🇪 Oktoobri Kutse → Päevi reservini</h4>
 <p id="clock" class="fw-bold"></p>
 </div>
 </div>
 
-<!-- TABID -->
 <ul class="nav nav-tabs mb-3">
 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">📋 Toa korrapidaja list</button></li>
 </ul>
 
 <div class="tab-content">
 
 <!-- EDENEMINE -->
 <div class="tab-pane fade show active" id="progressTab">
-<div class="card shadow mb-4">
+<div class="card shadow">
 <div class="card-body">
 
 <label>Kogu periood</label>
@@ -60,13 +48,9 @@ table th, table td{
 <label>Jäänud</label>
 <input id="leftDays" class="form-control mb-2" readonly>
 
-<label>Progress</label>
 <div class="progress mb-3" style="height:30px">
 <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
 </div>
-
-<label>Järgmine eesmärk</label>
-<input id="goal" class="form-control" readonly>
 
 </div>
 </div>
@@ -76,178 +60,142 @@ table th, table td{
 <div class="tab-pane fade" id="todayTab">
 <div class="card shadow text-center mb-3">
 <div class="card-body">
-<h5>🧹 Tänased korrapidajad</h5>
-<p id="todayDate" class="fw-bold"></p>
-<p><strong>Parem tuba:</strong> <span id="todayRight"></span></p>
-<p><strong>Vasak tuba:</strong> <span id="todayLeft"></span></p>
+<h5>Tänased korrapidajad</h5>
+<p id="todayDate"></p>
+<p><strong>Parem:</strong> <span id="todayRight"></span></p>
+<p><strong>Vasak:</strong> <span id="todayLeft"></span></p>
 </div>
 </div>
 
 <div class="card shadow text-center">
 <div class="card-body">
-<h5>🧽 Ala koristajad täna</h5>
-<p id="areaCleaners" class="fw-bold"></p>
-<small class="text-muted">Valitakse automaatselt iga päev</small>
+<h5>Ala koristajad</h5>
+<p id="areaCleaners"></p>
 </div>
 </div>
 </div>
 
-<!-- LIST -->
-<div class="tab-pane fade" id="listTab">
-<div class="card shadow">
-<div class="card-body">
-<div class="accordion" id="roomsAccordion"></div>
-</div>
-</div>
-</div>
-
-</div>
 </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-/* ================== KUUPÄEVAD ================== */
-const START_DATE = new Date(2025,9,13);
-const END_DATE   = new Date(2026,5,12);
 
+/* KUUPÄEVAD */
+const START = new Date(2025,9,13);
+const END   = new Date(2026,5,12);
 const DUTY_START = new Date(2026,0,6);
-const DUTY_END   = new Date(2026,5,12);
 
-/* ================== TOAD ================== */
-const ROOMS = {
-  parem: {
-    label: "Parema toa korrapidaja",
-    names: ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"]
-  },
-  vasak: {
-    label: "Vasaku toa korrapidaja",
-    names: ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"]
-  }
-};
+/* TOAD */
+const PAREM = ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
+const VASAK = ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"];
 
-/* ================== ALA KORISTAJAD ================== */
-const ALL_SOLDIERS = [
- "SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI",
- "KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"
-];
-
+/* KÕIK */
+const ALL = [...PAREM,...VASAK];
 const PRIORITY = ["TAMME","PINT","KOSEMAA","KUUSEORG"];
 
-/* ================== ABID ================== */
-const DAY_MS = 86400000;
+const DAY = 86400000;
 
-function nowTallinn(){
+/* AEG */
+function now(){
   return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}));
 }
 function dayOnly(d){
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate());
 }
-function daysBetween(a,b){
-  return Math.floor((b - a) / DAY_MS);
-}
-
-/* ===== päevapõhine random ===== */
-function seededRandom(seed){
-  let x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
+function days(a,b){
+  return Math.floor((b-a)/DAY);
 }
 
-function pickDailyCleaners(date){
-  const seedBase = Math.floor(date.getTime()/DAY_MS);
+/* RANDOM */
+function rand(seed){
+  let x=Math.sin(seed)*10000;
+  return x-Math.floor(x);
+}
+
+/* GENERAATOR */
+function generateList(seedOffset){
+
+  const base = Math.floor(now().getTime()/DAY);
 
   let pool=[];
-  ALL_SOLDIERS.forEach(name=>{
-    const weight = PRIORITY.includes(name)?3:1;
-    for(let i=0;i<weight;i++) pool.push(name);
+  ALL.forEach(n=>{
+    const w = PRIORITY.includes(n)?3:1;
+    for(let i=0;i<w;i++) pool.push(n);
   });
 
-  let selected=new Set();
+  let set=new Set();
   let i=0;
 
-  while(selected.size<8){
-    const r=seededRandom(seedBase+i);
+  while(set.size<8){
+    const r=rand(base+seedOffset+i);
     const name=pool[Math.floor(r*pool.length)];
-    selected.add(name);
+    set.add(name);
     i++;
   }
-  return Array.from(selected);
+
+  return Array.from(set);
 }
 
-/* ================== UPDATE ================== */
+/* ALA KORISTAJAD */
+function getCleaners(){
+
+  let today = generateList(0);
+  let yesterday = generateList(-1000);
+
+  let result = today.filter(n=>!yesterday.includes(n));
+
+  let i=1;
+  while(result.length<8){
+    const extra = generateList(i);
+    extra.forEach(n=>{
+      if(result.length<8 && !result.includes(n) && !yesterday.includes(n)){
+        result.push(n);
+      }
+    });
+    i++;
+  }
+
+  return result;
+}
+
+/* UPDATE */
 function update(){
-  const now = nowTallinn();
-  clock.innerText = now.toLocaleDateString("et-EE")+" "+now.toLocaleTimeString("et-EE");
 
-  const today = dayOnly(now);
-  const start = dayOnly(START_DATE);
-  const end   = dayOnly(END_DATE);
+  const n=now();
+  const today=dayOnly(n);
 
-  const total = daysBetween(start,end)+1;
-  const done  = Math.max(0, daysBetween(start,today));
-  const left  = Math.max(0, daysBetween(today,end)+1);
+  clock.innerText = n.toLocaleDateString("et-EE")+" "+n.toLocaleTimeString("et-EE");
+
+  const total = days(dayOnly(START),dayOnly(END));
+  const done  = days(dayOnly(START),today);
+  const left  = days(today,dayOnly(END));
 
   totalDays.value = total+" päeva";
   doneDays.value  = done+" päeva";
-  leftDays.value  = left+" päeva";
+  leftDays.value  = left+" päeva"; // 👉 67
 
   const pct = Math.min(100,(done/total*100).toFixed(1));
   progressBar.style.width=pct+"%";
   progressBar.innerText=pct+"%";
 
-  const g50=Math.round(total*0.5);
-  const g75=Math.round(total*0.75);
-  goal.value =
-    done<g50?`50%: ${g50-done} päeva`:
-    done<g75?`75%: ${g75-done} päeva`:
-    done<total?`100%: ${total-done} päeva`:"VALMIS";
+  todayDate.innerText = today.toLocaleDateString("et-EE");
 
-  const dutyIndex=daysBetween(dayOnly(DUTY_START),today);
-  todayDate.innerText=today.toLocaleDateString("et-EE");
-  todayRight.innerText=ROOMS.parem.names[dutyIndex%ROOMS.parem.names.length];
-  todayLeft.innerText=ROOMS.vasak.names[dutyIndex%ROOMS.vasak.names.length];
+  const idx = days(dayOnly(DUTY_START),today);
 
-  /* ala koristajad */
-  const cleaners=pickDailyCleaners(today);
-  areaCleaners.innerText=cleaners.join(", ");
+  todayRight.innerText = PAREM[Math.abs(idx)%PAREM.length];
+  todayLeft.innerText  = VASAK[Math.abs(idx)%VASAK.length];
+
+  areaCleaners.innerText = getCleaners().join(", ");
 }
 
-/* ================== LISTID ================== */
-function buildLists(){
-  let html="",acc=0;
-  for(const key in ROOMS){
-    const room=ROOMS[key];
-    html+=`
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button ${acc?"collapsed":""}"
-          data-bs-toggle="collapse" data-bs-target="#room${acc}">
-          ${room.label}
-        </button>
-      </h2>
-      <div id="room${acc}" class="accordion-collapse collapse ${acc?"":"show"}"
-        data-bs-parent="#roomsAccordion">
-        <div class="accordion-body">
-        <table class="table table-bordered table-striped">
-        <thead><tr><th>Kuupäev</th><th>Nimi</th></tr></thead><tbody>`;
+/* START */
+document.addEventListener("DOMContentLoaded",function(){
+  update();
+  setInterval(update,1000);
+});
 
-    let i=0;
-    for(let d=new Date(DUTY_START); d<=DUTY_END; d.setDate(d.getDate()+1)){
-      html+=`<tr><td>${d.toLocaleDateString("et-EE")}</td><td>${room.names[i%room.names.length]}</td></tr>`;
-      i++;
-    }
-
-    html+=`</tbody></table></div></div></div>`;
-    acc++;
-  }
-  roomsAccordion.innerHTML=html;
-}
-
-/* ================== START ================== */
-buildLists();
-update();
-setInterval(update,1000);
 </script>
 
 </body>
