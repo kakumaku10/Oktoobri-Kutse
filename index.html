@@ -8,13 +8,8 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-body{
-background:#f5f5f5;
-}
-.progress-bar{
-color:white;
-font-weight:bold;
-}
+body{background:#f5f5f5;}
+.progress-bar{color:white;font-weight:bold;}
 </style>
 </head>
 
@@ -52,14 +47,18 @@ font-weight:bold;
 <div class="card shadow">
 <div class="card-body">
 
-<label>Jäänud</label>
-<input id="leftDays" class="form-control mb-3" readonly>
+<label>Kogu periood</label>
+<input id="totalDays" class="form-control mb-2" readonly>
 
-<div class="progress" style="height:30px">
+<label>Tehtud</label>
+<input id="doneDays" class="form-control mb-2" readonly>
+
+<label>Jäänud</label>
+<input id="leftDays" class="form-control mb-2" readonly>
+
+<div class="progress mb-3" style="height:30px">
 <div id="progressBar"
-class="progress-bar progress-bar-striped progress-bar-animated">
-0%
-</div>
+class="progress-bar progress-bar-striped progress-bar-animated">0%</div>
 </div>
 
 </div>
@@ -94,9 +93,11 @@ class="progress-bar progress-bar-striped progress-bar-animated">
 
 <script>
 
+/* KUUPÄEVAD */
 const START = new Date(2025,9,13)
 const END   = new Date(2026,5,12)
 
+/* TOAD */
 const PAREM = ["ARU","SUDER","PISNENKO","TAMMUS","KASPAR","VIISPERT","NURMETALO","KAAREL","MARK","KRISTI"]
 const VASAK = ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"]
 
@@ -106,54 +107,62 @@ function now(){
 return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Tallinn"}))
 }
 
-function days(a,b){
-return Math.floor((b-a)/DAY)
+/* OLULINE FIX */
+function daysBetween(a,b){
+return Math.floor((b - a) / DAY)
 }
 
+function getToday(){
+const n = now()
+return new Date(n.getFullYear(), n.getMonth(), n.getDate())
+}
+
+/* SHUFFLE */
 function shuffle(arr,seed){
-
 let a=[...arr]
-
-function r(n){
-let x=Math.sin(n)*10000
-return x-Math.floor(x)
-}
-
+function r(n){let x=Math.sin(n)*10000;return x-Math.floor(x)}
 for(let i=a.length-1;i>0;i--){
 const j=Math.floor(r(seed+i)*(i+1))
 [a[i],a[j]]=[a[j],a[i]]
 }
-
 return a
 }
 
+/* UPDATE */
 function update(){
 
 const n=now()
+const today=getToday()
 
 clock.innerText =
 n.toLocaleDateString("et-EE")+" "+
 n.toLocaleTimeString("et-EE")
 
-const total = days(START,END)
-const done  = days(START,n)
-const left  = days(n,END)   // 🔥 FIX SIIN
+const startDay = new Date(START.getFullYear(),START.getMonth(),START.getDate())
+const endDay   = new Date(END.getFullYear(),END.getMonth(),END.getDate())
 
-leftDays.value = left+" päeva"
+const total = daysBetween(startDay,endDay)
+const done  = daysBetween(startDay,today)
+const left  = daysBetween(today,endDay)
+
+totalDays.value = total+" päeva"
+doneDays.value  = done+" päeva"
+leftDays.value  = left+" päeva"   // 👉 nüüd 67
 
 const pct = Math.min(100,(done/total*100).toFixed(1))
 progressBar.style.width=pct+"%"
 progressBar.innerText=pct+"%"
 
-todayDate.innerText = n.toLocaleDateString("et-EE")
+/* TÄNA */
+todayDate.innerText = today.toLocaleDateString("et-EE")
 
-const index = days(new Date(2026,0,6),n)
+const index = daysBetween(new Date(2026,0,6),today)
 
 todayRight.innerText = PAREM[Math.abs(index)%PAREM.length]
 todayLeft.innerText  = VASAK[Math.abs(index)%VASAK.length]
 
-/* ALA KORISTAJAD */
-const seed = days(new Date(2025,0,1),n)
+/* ALA KORISTAJAD (lihtne ja kindel) */
+const seed = daysBetween(new Date(2025,0,1),today)
 
 const right = shuffle(PAREM,seed).slice(0,4)
 const lefts = shuffle(VASAK,seed).slice(0,4)
@@ -166,6 +175,7 @@ randomList.innerHTML+=`<li class="list-group-item">${n}</li>`
 
 }
 
+/* START */
 document.addEventListener("DOMContentLoaded",function(){
 update()
 setInterval(update,1000)
