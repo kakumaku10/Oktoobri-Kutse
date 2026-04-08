@@ -91,9 +91,6 @@ const DUTY_START = new Date(2026,0,6);
 const PAREM = ["KOSEMAA","KUUSEORG","LUMISTE","MÜÜR","PAASKIVI","PEETRIS","PINT","TAMME","JAKOBSON"];
 const VASAK = ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO","KAAREL PLANS","MARK","KRISTI"];
 
-/* KÕIK */
-const ALL = [...PAREM,...VASAK];
-
 const DAY = 86400000;
 
 /* AEG */
@@ -107,40 +104,41 @@ function days(a,b){
   return Math.floor((b-a)/DAY);
 }
 
-/* SHUFFLE */
-function shuffle(arr,seed){
-  let a=[...arr];
-  function r(n){
-    let x=Math.sin(n)*10000;
-    return x-Math.floor(x);
-  }
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(r(seed+i)*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
-
-/* ALA KORISTAJAD */
+/* ALA KORISTAJAD PRO+ */
 function getCleaners(today){
 
-  const seed = Math.floor(today.getTime()/DAY);
+  const key = "cleanerHistory";
+  let history = JSON.parse(localStorage.getItem(key) || "{}");
 
-  let todayList = shuffle(ALL,seed).slice(0,8);
-  let yesterdayList = shuffle(ALL,seed-1).slice(0,8);
+  const todayStr = today.toDateString();
 
-  let result = todayList.filter(n => !yesterdayList.includes(n));
+  function pick(room){
 
-  let i = 1;
-  while(result.length < 8){
-    let extra = shuffle(ALL,seed+i);
-    extra.forEach(n=>{
-      if(result.length < 8 && !result.includes(n) && !yesterdayList.includes(n)){
-        result.push(n);
-      }
+    let sorted = [...room].sort((a,b)=>{
+      const aLast = history[a] || 0;
+      const bLast = history[b] || 0;
+      return aLast - bLast;
     });
-    i++;
+
+    let selected = [];
+
+    for(let i=0;i<sorted.length && selected.length<4;i++){
+      selected.push(sorted[i]);
+    }
+
+    return selected;
   }
+
+  const right = pick(PAREM);
+  const left  = pick(VASAK);
+
+  const result = [...right,...left];
+
+  result.forEach(name=>{
+    history[name] = todayStr;
+  });
+
+  localStorage.setItem(key, JSON.stringify(history));
 
   return result;
 }
