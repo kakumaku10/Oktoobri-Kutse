@@ -93,7 +93,6 @@ const VASAK = ["SUDER","PISNENKO","TAMMUS","KASPAR PLANS","VIISPERT","NURMETALO"
 
 /* KÕIK */
 const ALL = [...PAREM,...VASAK];
-const PRIORITY = ["TAMME","PINT","KOSEMAA","KUUSEORG"];
 
 const DAY = 86400000;
 
@@ -108,56 +107,31 @@ function days(a,b){
   return Math.floor((b-a)/DAY);
 }
 
-/* RANDOM */
-function rand(seed){
-  let x=Math.sin(seed)*10000;
-  return x-Math.floor(x);
+/* SHUFFLE (päevapõhine) */
+function shuffle(arr,seed){
+  let a=[...arr];
+  function r(n){
+    let x=Math.sin(n)*10000;
+    return x-Math.floor(x);
+  }
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(r(seed+i)*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
 }
 
-/* GENERAATOR */
-function generateList(seedOffset){
+/* ALA KORISTAJAD - LIHTNE JA KINDel */
+function getCleaners(today){
 
-  const base = Math.floor(now().getTime()/DAY);
+  // iga päev uus seed
+  const seed = Math.floor(today.getTime()/DAY);
 
-  let pool=[];
-  ALL.forEach(n=>{
-    const w = PRIORITY.includes(n)?3:1;
-    for(let i=0;i<w;i++) pool.push(n);
-  });
+  // segame nimekirja
+  const shuffled = shuffle(ALL,seed);
 
-  let set=new Set();
-  let i=0;
-
-  while(set.size<8){
-    const r=rand(base+seedOffset+i);
-    const name=pool[Math.floor(r*pool.length)];
-    set.add(name);
-    i++;
-  }
-
-  return Array.from(set);
-}
-
-/* ALA KORISTAJAD */
-function getCleaners(){
-
-  let today = generateList(0);
-  let yesterday = generateList(-1000);
-
-  let result = today.filter(n=>!yesterday.includes(n));
-
-  let i=1;
-  while(result.length<8){
-    const extra = generateList(i);
-    extra.forEach(n=>{
-      if(result.length<8 && !result.includes(n) && !yesterday.includes(n)){
-        result.push(n);
-      }
-    });
-    i++;
-  }
-
-  return result;
+  // võtame esimesed 8
+  return shuffled.slice(0,8);
 }
 
 /* UPDATE */
@@ -174,7 +148,7 @@ function update(){
 
   totalDays.value = total+" päeva";
   doneDays.value  = done+" päeva";
-  leftDays.value  = left+" päeva"; // 👉 67
+  leftDays.value  = left+" päeva";
 
   const pct = Math.min(100,(done/total*100).toFixed(1));
   progressBar.style.width=pct+"%";
@@ -187,7 +161,8 @@ function update(){
   todayRight.innerText = PAREM[Math.abs(idx)%PAREM.length];
   todayLeft.innerText  = VASAK[Math.abs(idx)%VASAK.length];
 
-  areaCleaners.innerText = getCleaners().join(", ");
+  // 🔥 alati uus iga päev
+  areaCleaners.innerText = getCleaners(today).join(", ");
 }
 
 /* START */
