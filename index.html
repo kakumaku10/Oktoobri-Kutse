@@ -104,43 +104,30 @@ function days(a,b){
   return Math.floor((b-a)/DAY);
 }
 
-/* ALA KORISTAJAD PRO+ */
+/* SHUFFLE */
+function shuffle(arr,seed){
+  let a=[...arr];
+  function r(n){
+    let x=Math.sin(n)*10000;
+    return x-Math.floor(x);
+  }
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(r(seed+i)*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+/* 🔥 ALA KORISTAJAD (LIHTNE + KINDLALT MUUTUV) */
 function getCleaners(today){
 
-  const key = "cleanerHistory";
-  let history = JSON.parse(localStorage.getItem(key) || "{}");
+  const seed = Math.floor(today.getTime()/DAY);
 
-  const todayStr = today.toDateString();
+  // 4 parem + 4 vasak
+  const right = shuffle(PAREM,seed).slice(0,4);
+  const left  = shuffle(VASAK,seed+100).slice(0,4);
 
-  function pick(room){
-
-    let sorted = [...room].sort((a,b)=>{
-      const aLast = history[a] || 0;
-      const bLast = history[b] || 0;
-      return aLast - bLast;
-    });
-
-    let selected = [];
-
-    for(let i=0;i<sorted.length && selected.length<4;i++){
-      selected.push(sorted[i]);
-    }
-
-    return selected;
-  }
-
-  const right = pick(PAREM);
-  const left  = pick(VASAK);
-
-  const result = [...right,...left];
-
-  result.forEach(name=>{
-    history[name] = todayStr;
-  });
-
-  localStorage.setItem(key, JSON.stringify(history));
-
-  return result;
+  return [...right,...left];
 }
 
 /* UPDATE */
@@ -170,6 +157,7 @@ function update(){
   todayRight.innerText = PAREM[Math.abs(idx)%PAREM.length];
   todayLeft.innerText  = VASAK[Math.abs(idx)%VASAK.length];
 
+  // 🔥 iga päev uus automaatselt
   areaCleaners.innerText = getCleaners(today).join(", ");
 }
 
