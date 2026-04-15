@@ -20,6 +20,7 @@ body{background:#f5f5f5;}
 <body>
 <div class="container py-4">
 
+<!-- PEALKIRI -->
 <div class="card shadow text-center mb-3">
 <div class="card-body">
 <h4>🇪🇪 Oktoobri Kutse → Päevi reservini</h4>
@@ -27,9 +28,14 @@ body{background:#f5f5f5;}
 </div>
 </div>
 
+<!-- TABID -->
 <ul class="nav nav-tabs mb-3">
-<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button></li>
+<li class="nav-item">
+<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#progressTab">📈 Edenemine</button>
+</li>
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#todayTab">🧹 Täna</button>
+</li>
 </ul>
 
 <div class="tab-content">
@@ -58,19 +64,12 @@ body{background:#f5f5f5;}
 
 <!-- TÄNA -->
 <div class="tab-pane fade" id="todayTab">
-<div class="card shadow text-center mb-3">
+<div class="card shadow text-center">
 <div class="card-body">
 <h5>Tänased korrapidajad</h5>
 <p id="todayDate"></p>
 <p><strong>Parem:</strong> <span id="todayRight"></span></p>
 <p><strong>Vasak:</strong> <span id="todayLeft"></span></p>
-</div>
-</div>
-
-<div class="card shadow text-center">
-<div class="card-body">
-<h5>Ala koristajad</h5>
-<p id="areaCleaners"></p>
 </div>
 </div>
 </div>
@@ -104,32 +103,6 @@ function days(a,b){
   return Math.floor((b-a)/DAY);
 }
 
-/* SHUFFLE */
-function shuffle(arr,seed){
-  let a=[...arr];
-  function r(n){
-    let x=Math.sin(n)*10000;
-    return x-Math.floor(x);
-  }
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(r(seed+i)*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
-
-/* 🔥 ALA KORISTAJAD (LIHTNE + KINDLALT MUUTUV) */
-function getCleaners(today){
-
-  const seed = Math.floor(today.getTime()/DAY);
-
-  // 4 parem + 4 vasak
-  const right = shuffle(PAREM,seed).slice(0,4);
-  const left  = shuffle(VASAK,seed+100).slice(0,4);
-
-  return [...right,...left];
-}
-
 /* UPDATE */
 function update(){
 
@@ -156,9 +129,6 @@ function update(){
 
   todayRight.innerText = PAREM[Math.abs(idx)%PAREM.length];
   todayLeft.innerText  = VASAK[Math.abs(idx)%VASAK.length];
-
-  // 🔥 iga päev uus automaatselt
-  areaCleaners.innerText = getCleaners(today).join(", ");
 }
 
 /* START */
